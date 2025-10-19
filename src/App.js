@@ -368,6 +368,7 @@ export default function PeptidePredictor() {
                     <th className="px-4 py-3 text-left text-slate-300 font-semibold">Séquence</th>
                     <th className="px-4 py-3 text-left text-slate-300 font-semibold">Position</th>
                     <th className="px-4 py-3 text-left text-slate-300 font-semibold">aa</th>
+                    <th className="px-4 py-3 text-left text-slate-300 font-semibold">Bioactivité</th>
                     <th className="px-4 py-3 text-left text-slate-300 font-semibold">Gamme</th>
                     <th className="px-4 py-3 text-left text-slate-300 font-semibold">Motif</th>
                   </tr>
@@ -392,6 +393,26 @@ export default function PeptidePredictor() {
                           {peptide.length}
                         </td>
                         <td className="px-4 py-3">
+                          <div className="flex items-center gap-2">
+                            <span className="text-xs font-semibold text-white">
+                              {peptide.bioactivityScore.toFixed(1)}/100
+                            </span>
+                            <div className="w-16 bg-slate-700 rounded-full h-2">
+                              <div
+                                className={`h-2 rounded-full transition-all ${
+                                  peptide.bioactivityScore >= 70 ? 'bg-green-500' :
+                                  peptide.bioactivityScore >= 50 ? 'bg-yellow-500' :
+                                  'bg-red-500'
+                                }`}
+                                style={{ width: `${peptide.bioactivityScore}%` }}
+                              ></div>
+                            </div>
+                            <span className="text-xs text-slate-400">
+                              {peptide.bioactivitySource === 'api' ? '🤖' : '📊'}
+                            </span>
+                          </div>
+                        </td>
+                        <td className="px-4 py-3">
                           {peptide.inRange ? (
                             <span className="text-xs bg-green-900/30 text-green-400 px-2 py-1 rounded">
                               ✓ Optimal
@@ -409,12 +430,12 @@ export default function PeptidePredictor() {
                     ))
                   ) : (
                     <tr>
-                      <td colSpan="6" className="px-4 py-4 text-center text-slate-500">
+                      <td colSpan="7" className="px-4 py-4 text-center text-slate-500">
                         Aucun peptide trouvé avec ces paramètres
                       </td>
                     </tr>
                   )}
-                </tbody>
+            </tbody>
               </table>
             </div>
           </div>
