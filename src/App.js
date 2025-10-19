@@ -22,71 +22,65 @@ export default function PeptidePredictor() {
   };
 
   const handleAnalyze = async () => {
-    setError('');
-    setResults(null);
+  setError('');
+  setResults(null);
 
-    if (!sequence.trim()) {
-      setError('Veuillez entrer une séquence protéique');
+  if (!sequence.trim()) {
+    setError('Veuillez entrer une séquence protéique');
+    return;
+  }
+
+  setLoading(true);
+
+  try {
+    const cleanSeq = parseSequence(sequence);
+
+    if (!/^[ACDEFGHIKLMNPQRSTVWY*]+$/.test(cleanSeq)) {
+      setError('La séquence contient des caractères invalides.');
+      setLoading(false);
       return;
     }
 
-    setLoading(true);
+    // ⭐ APPELER LE BACKEND AU LIEU DE FAIRE L'ANALYSE LOCALEMENT
+    const API_URL = 'https://peptide-predictor-api-production.up.railway.app/analyze';
+    
+    const response = await fetch(API_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        sequence: cleanSeq,
+        mode: mode,
+        signalPeptideLength: params.signalPeptideLength,
+        minCleavageSites: params.minCleavageSites,
+        minCleavageSpacing: params.minCleavageSpacing
+      })
+    });
 
-    try {
-      const cleanSeq = parseSequence(sequence);
-
-      if (!/^[ACDEFGHIKLMNPQRSTVWY*]+$/.test(cleanSeq)) {
-        setError('La séquence contient des caractères invalides. Utilisez uniquement les codes standard des acides aminés.');
-        setLoading(false);
-        return;
-      }
-
-      if (cleanSeq.length < params.signalPeptideLength + 10) {
-        setError('La séquence est trop courte pour l\'analyse');
-        setLoading(false);
-        return;
-      }
-
-      // Appeler le backend Railway
-      const API_URL = 'https://peptide-predictor-api-production.up.railway.app/analyze';
-      
-      const response = await fetch(API_URL, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          sequence: cleanSeq,
-          mode: mode,
-          signalPeptideLength: params.signalPeptideLength,
-          minCleavageSites: params.minCleavageSites,
-          minCleavageSpacing: params.minCleavageSpacing
-        })
-      });
-
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.detail || 'Erreur serveur');
-      }
-
-      const data = await response.json();
-      
-      // Transformer les résultats
-      setResults({
-        sequenceLength: data.sequenceLength,
-        cleavageSitesCount: data.cleavageSitesCount,
-        peptides: data.peptides,
-        peptidesInRange: data.peptidesInRange,
-        cleavageMotifCounts: data.peptides.reduce((acc, p) => {
-          acc[p.cleavageMotif] = (acc[p.cleavageMotif] || 0) + 1;
-          return acc;
-        }, {}),
-        originalSequence: cleanSeq
-      });
-    } catch (err) {
-      setError('Erreur : ' + err.message);
-    } finally {
-      setLoading(false);
+    if (!response.ok) {
+      const errorData = await response.json();
+      throw new Error(errorData.detail || 'Erreur serveur');
     }
-  };
+
+    const data = await response.json();
+    
+    // Afficher les résultats du backend
+    setResults({
+      sequenceLength: data.sequenceLength,
+      cleavageSitesCount: data.cleavageSitesCount,
+      peptides: data.peptides,
+      peptidesInRange: data.peptidesInRange,
+      cleavageMotifCounts: data.peptides.reduce((acc, p) => {
+        acc[p.cleavageMotif] = (acc[p.cleavageMotif] || 0) + 1;
+        return acc;
+      }, {}),
+      originalSequence: cleanSeq
+    });
+  } catch (err) {
+    setError('Erreur : ' + err.message);
+  } finally {
+    setLoading(false);
+  }
+};
 
   const handleFileUpload = (e) => {
     const file = e.target.files?.[0];
