@@ -25,6 +25,9 @@ function PeptidePredictor() {
   // API URL (utilisera les variables d'environnement Vercel)
   const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:8000';
 
+  console.log('🔗 API_URL:', API_URL);
+
+
   // Fonctions utilitaires
   const parseSequence = (input) => {
     let cleanSeq = input.trim();
@@ -46,61 +49,76 @@ function PeptidePredictor() {
   };
 
   const handleAnalyze = async () => {
-    setError('');
-    setResults(null);
+  setError('');
+  setResults(null);
 
-    if (!sequence.trim()) {
-      setError(t('errorEnterSequence'));
+  if (!sequence.trim()) {
+    setError(t('errorEnterSequence'));
+    return;
+  }
+
+  setLoading(true);
+
+  try {
+    const cleanSeq = parseSequence(sequence);
+
+    if (!/^[ACDEFGHIKLMNPQRSTVWY*]+$/.test(cleanSeq)) {
+      setError(t('errorInvalidCharacters'));
+      setLoading(false);
       return;
     }
 
-    setLoading(true);
+    const response = await fetch(`${API_URL}/analyze`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        sequence: cleanSeq,
+        mode: mode,
+        signalPeptideLength: params.signalPeptideLength,
+        minCleavageSites: params.minCleavageSites,
+        minCleavageSpacing: params.minCleavageSpacing
+      })
+    });
 
-    try {
-      const cleanSeq = parseSequence(sequence);
-
-      if (!/^[ACDEFGHIKLMNPQRSTVWY*]+$/.test(cleanSeq)) {
-        setError(t('errorInvalidCharacters'));
-        setLoading(false);
-        return;
-      }
-
-      const response = await fetch(`${API_URL}/analyze`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          sequence: cleanSeq,
-          mode: mode,
-          signalPeptideLength: params.signalPeptideLength,
-          minCleavageSites: params.minCleavageSites,
-          minCleavageSpacing: params.minCleavageSpacing
-        })
-      });
-
-      if (!response.ok) {
+    // ⭐ AMÉLIORATION : Gestion d'erreur robuste
+    if (!response.ok) {
+      let errorMessage = `HTTP ${response.status}`;
+      try {
         const errorData = await response.json();
-        throw new Error(errorData.detail || 'Server error');
+        errorMessage = errorData.detail || errorMessage;
+      } catch (e) {
+        // Si pas de JSON, utiliser le status text
+        errorMessage = response.statusText || errorMessage;
       }
-
-      const data = await response.json();
-      
-      setResults({
-        sequenceLength: data.sequenceLength,
-        cleavageSitesCount: data.cleavageSitesCount,
-        peptides: data.peptides,
-        peptidesInRange: data.peptidesInRange,
-        cleavageMotifCounts: data.peptides.reduce((acc, p) => {
-          acc[p.cleavageMotif] = (acc[p.cleavageMotif] || 0) + 1;
-          return acc;
-        }, {}),
-        originalSequence: cleanSeq
-      });
-    } catch (err) {
-      setError(`${t('errorServer')} ${err.message}`);
-    } finally {
-      setLoading(false);
+      throw new Error(errorMessage);
     }
-  };
+
+    const data = await response.json();
+    
+    setResults({
+      sequenceLength: data.sequenceLength,
+      cleavageSitesCount: data.cleavageSitesCount,
+      peptides: data.peptides,
+      peptidesInRange: data.peptidesInRange,
+      cleavageMotifCounts: data.peptides.reduce((acc, p) => {
+        acc[p.cleavageMotif] = (acc[p.cleavageMotif] || 0) + 1;
+        return acc;
+      }, {}),
+      originalSequence: cleanSeq
+    });
+  } catch (err) {
+    // ⭐ AMÉLIORATION : Erreur plus détaillée
+    console.error('Analysis error:', err);
+    
+    if (err.message.includes('Failed to fetch')) {
+      setError(`${t('errorServer')} Cannot reach API server. Check your connection.`);
+    } else {
+      setError(`${t('errorServer')} ${err.message}`);
+    }
+  } finally {
+    setLoading(false);
+  }
+};
 
   const downloadResults = () => {
     if (!results) return;
