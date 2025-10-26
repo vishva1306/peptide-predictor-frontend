@@ -6,12 +6,12 @@ export const translations = {
     
     // Detection modes
     modeTitle: "Detection Mode",
-    modeStrict: "STRICT Mode (Recommended)",
-    modeStrictDesc: "Complete regex from Nature paper. Fewer results but more reliable.",
-    modeStrictNote: "Constraints: lookbehind (?<!K|R), strict spacing verification",
+    modeStrict: "STRICT Mode",
+    modeStrictDesc: "Complete regex from Nature paper with all constraints.",
+    modeStrictNote: "According to paper: lookbehind (?<!K|R), strict spacing verification",
     modePermissive: "PERMISSIVE Mode",
-    modePermissiveDesc: "Simplified regex. More results but may include false positives.",
-    modePermissiveNote: "Reduced constraints: sensitive detection",
+    modePermissiveDesc: "Simple cleavage site detection without additional constraints.",
+    modePermissiveNote: "Simplified algorithm: detects KK/KR/RR/RK motifs only",
     
     // Sequence input
     sequenceTitle: "Protein Sequence",
@@ -73,12 +73,12 @@ export const translations = {
     
     // Modes de détection
     modeTitle: "Mode de détection",
-    modeStrict: "Mode STRICT (Recommandé)",
-    modeStrictDesc: "Regex complète du papier Nature. Moins de résultats mais plus fiables.",
-    modeStrictNote: "Contraintes: lookbehind (?<!K|R), vérification espacement stricte",
+    modeStrict: "Mode STRICT",
+    modeStrictDesc: "Regex complète du papier Nature avec toutes les contraintes.",
+    modeStrictNote: "Selon le papier : lookbehind (?<!K|R), vérification espacement stricte",
     modePermissive: "Mode PERMISSIF",
-    modePermissiveDesc: "Regex simplifiée. Plus de résultats mais peut inclure des faux positifs.",
-    modePermissiveNote: "Contraintes réduites: détection sensible",
+    modePermissiveDesc: "Détection simple des sites de clivage sans contraintes additionnelles.",
+    modePermissiveNote: "Algorithme simplifié : détecte uniquement les motifs KK/KR/RR/RK",
     
     // Saisie séquence
     sequenceTitle: "Séquence Protéique",
