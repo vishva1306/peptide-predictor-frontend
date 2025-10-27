@@ -50,23 +50,41 @@ export default function PeptidesTable({ results }) {
                     {peptide.length}
                   </td>
                   <td className="px-4 py-3">
-                    <div className="flex items-center gap-2">
-                      <span className="text-xs font-semibold text-white">
-                        {peptide.bioactivityScore.toFixed(1)}/100
-                      </span>
-                      <div className="w-16 bg-slate-700 rounded-full h-2">
-                        <div
-                          className={`h-2 rounded-full transition-all ${
-                            peptide.bioactivityScore >= 70 ? 'bg-green-500' :
-                            peptide.bioactivityScore >= 50 ? 'bg-yellow-500' :
-                            'bg-red-500'
-                          }`}
-                          style={{ width: `${peptide.bioactivityScore}%` }}
-                        ></div>
+                    <div className="relative group">
+                      <div className="flex items-center gap-2 cursor-help">
+                        <span className="text-xs font-semibold text-white">
+                          {peptide.bioactivityScore.toFixed(1)}/100
+                        </span>
+                        <div className="w-16 bg-slate-700 rounded-full h-2">
+                          <div
+                            className={`h-2 rounded-full transition-all ${
+                              peptide.bioactivityScore >= 70 ? 'bg-green-500' :
+                              peptide.bioactivityScore >= 50 ? 'bg-yellow-500' :
+                              'bg-red-500'
+                            }`}
+                            style={{ width: `${peptide.bioactivityScore}%` }}
+                          ></div>
+                        </div>
                       </div>
-                      <span className="text-xs text-slate-400">
-                        {peptide.bioactivitySource === 'api' ? '🤖' : '📊'}
-                      </span>
+                      
+                      {/* Tooltip */}
+                      <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-3 py-2 bg-slate-900 text-white text-xs rounded-lg shadow-xl opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none whitespace-nowrap z-10 border border-slate-700">
+                        {peptide.bioactivitySource === 'api' ? (
+                          <div className="flex items-center gap-2">
+                            <span className="text-green-400">🤖</span>
+                            <span>PeptideRanker API</span>
+                          </div>
+                        ) : (
+                          <div className="flex items-center gap-2">
+                            <span className="text-orange-400">📊</span>
+                            <span>Heuristic Score</span>
+                          </div>
+                        )}
+                        {/* Petite flèche vers le bas */}
+                        <div className="absolute top-full left-1/2 transform -translate-x-1/2 -mt-px">
+                          <div className="border-4 border-transparent border-t-slate-900"></div>
+                        </div>
+                      </div>
                     </div>
                   </td>
                   <td className="px-4 py-3">
