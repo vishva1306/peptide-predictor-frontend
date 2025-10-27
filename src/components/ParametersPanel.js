@@ -68,7 +68,7 @@ export default function ParametersPanel({ mode, setMode, params, setParams }) {
         </label>
         
         <div className="space-y-4">
-          {/* Signal Peptide Length */}
+          {/* Signal Peptide Length - TOUJOURS VISIBLE */}
           <div>
             <label className="block text-sm text-slate-300 mb-2">
               {t('signalPeptideLength')}: <span className="font-mono text-blue-400">{params.signalPeptideLength} {t('signalPeptideLengthUnit')}</span>
@@ -84,7 +84,7 @@ export default function ParametersPanel({ mode, setMode, params, setParams }) {
             <p className="text-xs text-slate-500 mt-1">{t('signalPeptideDesc')}</p>
           </div>
 
-          {/* Min Cleavage Sites */}
+          {/* Min Cleavage Sites - TOUJOURS VISIBLE */}
           <div>
             <label className="block text-sm text-slate-300 mb-2">
               {t('minCleavageSites')}: <span className="font-mono text-green-400">{params.minCleavageSites}</span>
@@ -100,21 +100,23 @@ export default function ParametersPanel({ mode, setMode, params, setParams }) {
             <p className="text-xs text-slate-500 mt-1">{t('minCleavageSitesDesc')}</p>
           </div>
 
-          {/* Min Cleavage Spacing */}
-          <div>
-            <label className="block text-sm text-slate-300 mb-2">
-              {t('minCleavageSpacing')}: <span className="font-mono text-purple-400">{params.minCleavageSpacing} {t('minCleavageSpacingUnit')}</span>
-            </label>
-            <input
-              type="range"
-              min="1"
-              max="20"
-              value={params.minCleavageSpacing}
-              onChange={(e) => setParams({ ...params, minCleavageSpacing: parseInt(e.target.value) })}
-              className="w-full"
-            />
-            <p className="text-xs text-slate-500 mt-1">{t('minCleavageSpacingDesc')}</p>
-          </div>
+          {/* Min Cleavage Spacing - UNIQUEMENT EN MODE STRICT */}
+          {mode === 'strict' && (
+            <div>
+              <label className="block text-sm text-slate-300 mb-2">
+                {t('minCleavageSpacing')}: <span className="font-mono text-purple-400">{params.minCleavageSpacing} {t('minCleavageSpacingUnit')}</span>
+              </label>
+              <input
+                type="range"
+                min="1"
+                max="20"
+                value={params.minCleavageSpacing}
+                onChange={(e) => setParams({ ...params, minCleavageSpacing: parseInt(e.target.value) })}
+                className="w-full"
+              />
+              <p className="text-xs text-slate-500 mt-1">{t('minCleavageSpacingDesc')}</p>
+            </div>
+          )}
         </div>
       </div>
     </div>
