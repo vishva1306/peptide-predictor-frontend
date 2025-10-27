@@ -1,17 +1,18 @@
 export const translations = {
   en: {
     // Header
-    title: "Peptide Predictor",
-    subtitle: "Analyze protein sequences with PCSK1/3 cleavage detection (Coassolo et al. Nature 2025)",
+    title: "Peptide Predictor - Svensson Lab",
+    subtitle: "Analyze protein sequences with PCSK1/3 cleavage detection",
+    labWebsite: "Svensson Lab Website",
     
     // Detection modes
     modeTitle: "Detection Mode",
     modeStrict: "STRICT Mode",
-    modeStrictDesc: "Complete regex from Nature paper with all constraints.",
-    modeStrictNote: "According to paper: lookbehind (?<!K|R), strict spacing verification",
+    modeStrictDesc: "Complete regex from Nature paper. Fewer results but more reliable.",
+    modeStrictNote: "Constraints: lookbehind (?<!K|R), strict spacing verification",
     modePermissive: "PERMISSIVE Mode",
-    modePermissiveDesc: "Simple cleavage site detection without additional constraints.",
-    modePermissiveNote: "Simplified algorithm: detects KK/KR/RR/RK motifs only",
+    modePermissiveDesc: "Simplified regex. More results but may include false positives.",
+    modePermissiveNote: "Reduced constraints: sensitive detection",
     
     // Sequence input
     sequenceTitle: "Protein Sequence",
@@ -63,22 +64,25 @@ export const translations = {
     errorServer: "Error:",
     
     // Footer
+    footerDeveloped: "Developed at Svensson Lab, Stanford Medicine",
+    footerLabLink: "Visit Svensson Lab Website",
     reference: "Based on: Coassolo et al. Nature 2025 - doi:10.1038/s41586-025-08683-y"
   },
   
   fr: {
     // Header
-    title: "Prédicteur de Peptides",
-    subtitle: "Analysez les séquences protéiques avec détection PCSK1/3 (Coassolo et al. Nature 2025)",
+    title: "Prédicteur de Peptides - Svensson Lab",
+    subtitle: "Analysez les séquences protéiques avec détection PCSK1/3",
+    labWebsite: "Site du Svensson Lab",
     
     // Modes de détection
     modeTitle: "Mode de détection",
     modeStrict: "Mode STRICT",
-    modeStrictDesc: "Regex complète du papier Nature avec toutes les contraintes.",
-    modeStrictNote: "Selon le papier : lookbehind (?<!K|R), vérification espacement stricte",
+    modeStrictDesc: "Regex complète du papier Nature. Moins de résultats mais plus fiables.",
+    modeStrictNote: "Contraintes: lookbehind (?<!K|R), vérification espacement stricte",
     modePermissive: "Mode PERMISSIF",
-    modePermissiveDesc: "Détection simple des sites de clivage sans contraintes additionnelles.",
-    modePermissiveNote: "Algorithme simplifié : détecte uniquement les motifs KK/KR/RR/RK",
+    modePermissiveDesc: "Regex simplifiée. Plus de résultats mais peut inclure des faux positifs.",
+    modePermissiveNote: "Contraintes réduites: détection sensible",
     
     // Saisie séquence
     sequenceTitle: "Séquence Protéique",
@@ -130,6 +134,8 @@ export const translations = {
     errorServer: "Erreur:",
     
     // Pied de page
+    footerDeveloped: "Développé au Svensson Lab, Stanford Medicine",
+    footerLabLink: "Visiter le site du Svensson Lab",
     reference: "Basé sur: Coassolo et al. Nature 2025 - doi:10.1038/s41586-025-08683-y"
   }
 };

@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { Loader, AlertCircle } from 'lucide-react';
 import { LanguageProvider, useTranslation } from './i18n/useTranslation';
 import Header from './components/Header';
+import Footer from './components/Footer';
 import SequenceInput from './components/SequenceInput';
 import ParametersPanel from './components/ParametersPanel';
 import ResultsPanel from './components/ResultsPanel';
@@ -206,9 +207,7 @@ function PeptidePredictor() {
         <PeptidesTable results={results} />
 
         {/* Footer */}
-        <div className="mt-8 text-center text-slate-500 text-sm">
-          {t('reference')}
-        </div>
+        <Footer />
       </div>
     </div>
   );
