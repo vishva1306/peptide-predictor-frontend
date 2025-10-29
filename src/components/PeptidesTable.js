@@ -6,6 +6,41 @@ export default function PeptidesTable({ results }) {
 
   if (!results) return null;
 
+  // ⭐ FONCTION pour déterminer la catégorie de taille
+  const getSizeCategory = (length) => {
+    if (length < 3) {
+      return {
+        label: t('sizeTiny'),
+        range: '<3 aa',
+        color: 'bg-slate-700/30 text-slate-400'
+      };
+    } else if (length >= 3 && length <= 20) {
+      return {
+        label: t('sizeSmall'),
+        range: '3-20 aa',
+        color: 'bg-green-900/30 text-green-400'
+      };
+    } else if (length >= 21 && length <= 50) {
+      return {
+        label: t('sizeMedium'),
+        range: '21-50 aa',
+        color: 'bg-blue-900/30 text-blue-400'
+      };
+    } else if (length >= 51 && length <= 100) {
+      return {
+        label: t('sizeLarge'),
+        range: '51-100 aa',
+        color: 'bg-purple-900/30 text-purple-400'
+      };
+    } else {
+      return {
+        label: t('sizeXLarge'),
+        range: '>100 aa',
+        color: 'bg-orange-900/30 text-orange-400'
+      };
+    }
+  };
+
   return (
     <div className="mt-6 bg-slate-800 rounded-lg border border-slate-700 overflow-hidden">
       <div className="p-6 border-b border-slate-700">
@@ -25,33 +60,52 @@ export default function PeptidesTable({ results }) {
               <th className="px-4 py-3 text-left text-slate-300 font-semibold">{t('tableHeaderSequence')}</th>
               <th className="px-4 py-3 text-left text-slate-300 font-semibold">{t('tableHeaderPosition')}</th>
               <th className="px-4 py-3 text-left text-slate-300 font-semibold">{t('tableHeaderLength')}</th>
-              <th className="px-4 py-3 text-left text-slate-300 font-semibold">{t('tableHeaderBioactivity')}</th>
-              <th className="px-4 py-3 text-left text-slate-300 font-semibold">{t('tableHeaderRange')}</th>
+              
+              {/* En-tête Bioactivité */}
+              <th className="px-4 py-3 text-left text-slate-300 font-semibold">
+                <div>
+                  <div>{t('tableHeaderBioactivity')}</div>
+                  <div className="text-xs font-normal text-slate-500 mt-0.5">
+                    {t('tableHeaderBioactivitySource')}
+                  </div>
+                </div>
+              </th>
+              
+              {/* ⭐ CHANGÉ : "Range" → "Size" */}
+              <th className="px-4 py-3 text-left text-slate-300 font-semibold">{t('tableHeaderSize')}</th>
+              
               <th className="px-4 py-3 text-left text-slate-300 font-semibold">{t('tableHeaderMotif')}</th>
             </tr>
           </thead>
           <tbody>
             {results.peptides.length > 0 ? (
-              results.peptides.map((peptide, idx) => (
-                <tr 
-                  key={idx} 
-                  className={`border-b border-slate-700 hover:bg-slate-700/50 ${
-                    peptide.inRange ? 'bg-slate-800/50' : 'bg-slate-800/20'
-                  }`}
-                >
-                  <td className="px-4 py-3 text-slate-400">{idx + 1}</td>
-                  <td className="px-4 py-3 font-mono text-blue-300 text-xs break-all">
-                    {peptide.sequence}
-                  </td>
-                  <td className="px-4 py-3 text-slate-400 text-xs">
-                    {peptide.start}-{peptide.end}
-                  </td>
-                  <td className="px-4 py-3 text-slate-400 text-xs font-semibold">
-                    {peptide.length}
-                  </td>
-                  <td className="px-4 py-3">
-                    <div className="relative group">
-                      <div className="flex items-center gap-2 cursor-help">
+              results.peptides.map((peptide, idx) => {
+                const sizeCategory = getSizeCategory(peptide.length);
+                
+                return (
+                  <tr 
+                    key={idx} 
+                    className={`border-b border-slate-700 hover:bg-slate-700/50 ${
+                      peptide.inRange ? 'bg-slate-800/50' : 'bg-slate-800/20'
+                    }`}
+                  >
+                    <td className="px-4 py-3 text-slate-400">{idx + 1}</td>
+                    <td className="px-4 py-3 font-mono text-blue-300 text-xs break-all">
+                      {peptide.sequence}
+                    </td>
+                    <td className="px-4 py-3 text-slate-400 text-xs">
+                      {peptide.start}-{peptide.end}
+                    </td>
+                    <td className="px-4 py-3 text-slate-400 text-xs font-semibold">
+                      {peptide.length}
+                    </td>
+                    
+                    {/* Bioactivité */}
+                    <td className="px-4 py-3">
+                      <div className="flex items-center gap-2">
+                        <span className="text-sm">
+                          {peptide.bioactivitySource === 'api' ? '🤖' : '📊'}
+                        </span>
                         <span className="text-xs font-semibold text-white">
                           {peptide.bioactivityScore.toFixed(1)}/100
                         </span>
@@ -66,43 +120,22 @@ export default function PeptidesTable({ results }) {
                           ></div>
                         </div>
                       </div>
-                      
-                      {/* Tooltip */}
-                      <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-3 py-2 bg-slate-900 text-white text-xs rounded-lg shadow-xl opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none whitespace-nowrap z-10 border border-slate-700">
-                        {peptide.bioactivitySource === 'api' ? (
-                          <div className="flex items-center gap-2">
-                            <span className="text-green-400">🤖</span>
-                            <span>PeptideRanker API</span>
-                          </div>
-                        ) : (
-                          <div className="flex items-center gap-2">
-                            <span className="text-orange-400">📊</span>
-                            <span>Heuristic Score</span>
-                          </div>
-                        )}
-                        {/* Petite flèche vers le bas */}
-                        <div className="absolute top-full left-1/2 transform -translate-x-1/2 -mt-px">
-                          <div className="border-4 border-transparent border-t-slate-900"></div>
-                        </div>
-                      </div>
-                    </div>
-                  </td>
-                  <td className="px-4 py-3">
-                    {peptide.inRange ? (
-                      <span className="text-xs bg-green-900/30 text-green-400 px-2 py-1 rounded">
-                        {t('optimal')}
+                    </td>
+                    
+                    {/* ⭐ NOUVELLE COLONNE SIZE */}
+                    <td className="px-4 py-3">
+                      <span className={`text-xs px-2 py-1 rounded ${sizeCategory.color}`}>
+                        {sizeCategory.label}
+                        <span className="ml-1 opacity-70">({sizeCategory.range})</span>
                       </span>
-                    ) : (
-                      <span className="text-xs bg-slate-700/30 text-slate-400 px-2 py-1 rounded">
-                        {t('outOfRange')}
-                      </span>
-                    )}
-                  </td>
-                  <td className="px-4 py-3 text-slate-400 font-mono text-xs">
-                    {peptide.cleavageMotif}
-                  </td>
-                </tr>
-              ))
+                    </td>
+                    
+                    <td className="px-4 py-3 text-slate-400 font-mono text-xs">
+                      {peptide.cleavageMotif}
+                    </td>
+                  </tr>
+                );
+              })
             ) : (
               <tr>
                 <td colSpan="7" className="px-4 py-4 text-center text-slate-500">

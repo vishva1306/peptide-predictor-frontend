@@ -52,10 +52,18 @@ export const translations = {
     tableHeaderSequence: "Sequence",
     tableHeaderPosition: "Position",
     tableHeaderLength: "aa",
-    tableHeaderBioactivity: "Bioactivity",
-    tableHeaderSource: "Source",
-    tableHeaderRange: "Range",
+    tableHeaderBioactivity: "Bioactivity Score",
+    tableHeaderBioactivitySource: "(Source: PeptideRanker API / Heuristic Model)",
+    tableHeaderSize: "Size",
     tableHeaderMotif: "Motif",
+    
+    // Size categories
+    sizeTiny: "Tiny",
+    sizeSmall: "Small",
+    sizeMedium: "Medium",
+    sizeLarge: "Large",
+    sizeXLarge: "X-Large",
+    
     optimal: "✓ Optimal",
     outOfRange: "Out of range",
     
@@ -123,10 +131,18 @@ export const translations = {
     tableHeaderSequence: "Séquence",
     tableHeaderPosition: "Position",
     tableHeaderLength: "aa",
-    tableHeaderBioactivity: "Bioactivité",
-    tableHeaderSource: "Source",
-    tableHeaderRange: "Gamme",
+    tableHeaderBioactivity: "Score de Bioactivité",
+    tableHeaderBioactivitySource: "(Source : API PeptideRanker / Modèle Heuristique)",
+    tableHeaderSize: "Taille",
     tableHeaderMotif: "Motif",
+    
+    // Catégories de taille
+    sizeTiny: "Minuscule",
+    sizeSmall: "Petite",
+    sizeMedium: "Moyenne",
+    sizeLarge: "Grande",
+    sizeXLarge: "Très Grande",
+    
     optimal: "✓ Optimal",
     outOfRange: "Hors gamme",
     
