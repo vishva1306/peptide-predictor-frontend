@@ -6,7 +6,7 @@ export default function PeptidesTable({ results }) {
 
   if (!results) return null;
 
-  // ⭐ FONCTION pour déterminer la catégorie de taille
+  // Fonction pour déterminer la catégorie de taille
   const getSizeCategory = (length) => {
     if (length < 3) {
       return {
@@ -50,6 +50,12 @@ export default function PeptidesTable({ results }) {
         <p className="text-sm text-slate-400 mt-1">
           {results.peptidesInRange} {t('peptidesInRangeNote')}
         </p>
+        {/* Afficher le Protein ID si présent */}
+        {results.proteinId && results.proteinId !== "N/A" && (
+          <p className="text-xs text-slate-500 mt-2 font-mono">
+            Protein: {results.proteinId}
+          </p>
+        )}
       </div>
       
       <div className="overflow-x-auto">
@@ -58,6 +64,7 @@ export default function PeptidesTable({ results }) {
             <tr>
               <th className="px-4 py-3 text-left text-slate-300 font-semibold">{t('tableHeaderNumber')}</th>
               <th className="px-4 py-3 text-left text-slate-300 font-semibold">{t('tableHeaderSequence')}</th>
+              {/* ⭐ SUPPRIMÉ : Colonne Protein ID */}
               <th className="px-4 py-3 text-left text-slate-300 font-semibold">{t('tableHeaderPosition')}</th>
               <th className="px-4 py-3 text-left text-slate-300 font-semibold">{t('tableHeaderLength')}</th>
               
@@ -71,7 +78,7 @@ export default function PeptidesTable({ results }) {
                 </div>
               </th>
               
-              {/* ⭐ CHANGÉ : "Range" → "Size" */}
+              {/* Colonne Size */}
               <th className="px-4 py-3 text-left text-slate-300 font-semibold">{t('tableHeaderSize')}</th>
               
               <th className="px-4 py-3 text-left text-slate-300 font-semibold">{t('tableHeaderMotif')}</th>
@@ -89,13 +96,22 @@ export default function PeptidesTable({ results }) {
                       peptide.inRange ? 'bg-slate-800/50' : 'bg-slate-800/20'
                     }`}
                   >
+                    {/* # */}
                     <td className="px-4 py-3 text-slate-400">{idx + 1}</td>
+                    
+                    {/* Sequence */}
                     <td className="px-4 py-3 font-mono text-blue-300 text-xs break-all">
                       {peptide.sequence}
                     </td>
+                    
+                    {/* ⭐ SUPPRIMÉ : Cellule Protein ID */}
+                    
+                    {/* Position */}
                     <td className="px-4 py-3 text-slate-400 text-xs">
                       {peptide.start}-{peptide.end}
                     </td>
+                    
+                    {/* Length */}
                     <td className="px-4 py-3 text-slate-400 text-xs font-semibold">
                       {peptide.length}
                     </td>
@@ -122,7 +138,7 @@ export default function PeptidesTable({ results }) {
                       </div>
                     </td>
                     
-                    {/* ⭐ NOUVELLE COLONNE SIZE */}
+                    {/* Size */}
                     <td className="px-4 py-3">
                       <span className={`text-xs px-2 py-1 rounded ${sizeCategory.color}`}>
                         {sizeCategory.label}
@@ -130,6 +146,7 @@ export default function PeptidesTable({ results }) {
                       </span>
                     </td>
                     
+                    {/* Motif */}
                     <td className="px-4 py-3 text-slate-400 font-mono text-xs">
                       {peptide.cleavageMotif}
                     </td>

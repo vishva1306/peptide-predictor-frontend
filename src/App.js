@@ -24,7 +24,7 @@ function PeptidePredictor() {
   });
 
   // API URL (utilisera les variables d'environnement Vercel)
-  const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:8000';
+  const API_URL =  'http://localhost:8000';
 
   console.log('🔗 API_URL:', API_URL);
 
@@ -50,89 +50,145 @@ function PeptidePredictor() {
   };
 
   const handleAnalyze = async () => {
-  setError('');
-  setResults(null);
+    setError('');
+    setResults(null);
 
-  if (!sequence.trim()) {
-    setError(t('errorEnterSequence'));
-    return;
-  }
-
-  setLoading(true);
-
-  try {
-    const cleanSeq = parseSequence(sequence);
-
-    if (!/^[ACDEFGHIKLMNPQRSTVWY*]+$/.test(cleanSeq)) {
-      setError(t('errorInvalidCharacters'));
-      setLoading(false);
+    if (!sequence.trim()) {
+      setError(t('errorEnterSequence'));
       return;
     }
 
-    const response = await fetch(`${API_URL}/analyze`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        sequence: cleanSeq,
+    setLoading(true);
+
+    try {
+      // ⭐ Validation côté client (juste pour vérifier les caractères)
+      const tempClean = parseSequence(sequence);
+      
+      if (!/^[ACDEFGHIKLMNPQRSTVWY*]+$/.test(tempClean)) {
+        setError(t('errorInvalidCharacters'));
+        setLoading(false);
+        return;
+      }
+
+      const requestBody = {
+        sequence: sequence,  // ✅ Séquence originale avec header
         mode: mode,
         signalPeptideLength: params.signalPeptideLength,
         minCleavageSites: params.minCleavageSites,
         minCleavageSpacing: params.minCleavageSpacing
-      })
-    });
+      };
+      
+      // ⭐ DEBUG : Voir ce qu'on envoie
+      console.log('🚀 REQUEST BODY:', requestBody);
+      console.log('🚀 SEQUENCE (premiers 100 chars):', sequence.substring(0, 100));
 
-    // ⭐ AMÉLIORATION : Gestion d'erreur robuste
-    if (!response.ok) {
-      let errorMessage = `HTTP ${response.status}`;
-      try {
-        const errorData = await response.json();
-        errorMessage = errorData.detail || errorMessage;
-      } catch (e) {
-        // Si pas de JSON, utiliser le status text
-        errorMessage = response.statusText || errorMessage;
+      // ⭐ IMPORTANT : Envoyer la séquence ORIGINALE (avec header FASTA si présent)
+      const response = await fetch(`${API_URL}/analyze`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(requestBody)
+      });
+
+      if (!response.ok) {
+        let errorMessage = `HTTP ${response.status}`;
+        try {
+          const errorData = await response.json();
+          errorMessage = errorData.detail || errorMessage;
+        } catch (e) {
+          errorMessage = response.statusText || errorMessage;
+        }
+        throw new Error(errorMessage);
       }
-      throw new Error(errorMessage);
-    }
 
-    const data = await response.json();
-    
-    setResults({
-      sequenceLength: data.sequenceLength,
-      cleavageSitesCount: data.cleavageSitesCount,
-      peptides: data.peptides,
-      peptidesInRange: data.peptidesInRange,
-      cleavageMotifCounts: data.peptides.reduce((acc, p) => {
-        acc[p.cleavageMotif] = (acc[p.cleavageMotif] || 0) + 1;
-        return acc;
-      }, {}),
-      originalSequence: cleanSeq
-    });
-  } catch (err) {
-    // ⭐ AMÉLIORATION : Erreur plus détaillée
-    console.error('Analysis error:', err);
-    
-    if (err.message.includes('Failed to fetch')) {
-      setError(`${t('errorServer')} Cannot reach API server. Check your connection.`);
-    } else {
-      setError(`${t('errorServer')} ${err.message}`);
+      const data = await response.json();
+      
+      // ⭐ DEBUG : Vérifier ce que retourne l'API
+      console.log('🔍 API Response:', data);
+      console.log('🔍 Protein ID reçu:', data.proteinId);
+      
+      setResults({
+        sequenceLength: data.sequenceLength,
+        cleavageSitesCount: data.cleavageSitesCount,
+        peptides: data.peptides,
+        peptidesInRange: data.peptidesInRange,
+        proteinId: data.proteinId || "N/A",
+        cleavageMotifCounts: data.peptides.reduce((acc, p) => {
+          acc[p.cleavageMotif] = (acc[p.cleavageMotif] || 0) + 1;
+          return acc;
+        }, {}),
+        originalSequence: tempClean
+      });
+    } catch (err) {
+      console.error('Analysis error:', err);
+      
+      if (err.message.includes('Failed to fetch')) {
+        setError(`${t('errorServer')} Cannot reach API server. Check your connection.`);
+      } else {
+        setError(`${t('errorServer')} ${err.message}`);
+      }
+    } finally {
+      setLoading(false);
     }
-  } finally {
-    setLoading(false);
-  }
-};
+  };
 
   const downloadResults = () => {
     if (!results) return;
 
+    // Fonction pour déterminer la catégorie de taille
+    const getSizeCategory = (length) => {
+      if (length < 3) {
+        return 'Tiny (<3 aa)';
+      } else if (length >= 3 && length <= 20) {
+        return 'Small (3-20 aa)';
+      } else if (length >= 21 && length <= 50) {
+        return 'Medium (21-50 aa)';
+      } else if (length >= 51 && length <= 100) {
+        return 'Large (51-100 aa)';
+      } else {
+        return 'X-Large (>100 aa)';
+      }
+    };
+
+    // ⭐ GÉNÉRATION DU NOM DE FICHIER
+    let fileName = 'peptides';
+    
+    if (results.proteinId && results.proteinId !== "N/A") {
+      // Extraire une partie significative du Protein ID
+      // Exemple: "sp|Q96PX8|SLIK1_HUMAN ..." → "Q96PX8_SLIK1_HUMAN"
+      let cleanId = results.proteinId;
+      
+      // Si format UniProt (sp|ID|NAME ...), extraire ID et NAME
+      const uniprotMatch = cleanId.match(/[a-z]{2}\|([A-Z0-9]+)\|([A-Z0-9_]+)/i);
+      if (uniprotMatch) {
+        // Format: ID_NAME
+        cleanId = `${uniprotMatch[1]}_${uniprotMatch[2]}`;
+      } else {
+        // Sinon, prendre les 30 premiers caractères et nettoyer
+        cleanId = cleanId.substring(0, 30)
+          .replace(/[^a-zA-Z0-9_-]/g, '_')  // Remplacer caractères spéciaux
+          .replace(/_+/g, '_')  // Supprimer underscores multiples
+          .replace(/^_|_$/g, '');  // Supprimer underscores au début/fin
+      }
+      
+      fileName = `${cleanId}_peptides`;
+    } else {
+      // Pas de Protein ID → générer un nombre aléatoire de 4 chiffres
+      const randomNum = Math.floor(1000 + Math.random() * 9000);  // 1000-9999
+      fileName = `peptides_${randomNum}`;
+    }
+
     const csv = [
-      ['Peptide', 'Start', 'End', 'Length (aa)', 'In Range (5-25aa)', 'Bioactivity', 'Cleavage Motif', 'Mode'],
+      // ⭐ Ordre CSV : Peptide → Protein ID → Reste
+      ['Peptide', 'Protein ID', 'Start', 'End', 'Length (aa)', 'Size', 'Bioactivity', 'Source', 'Cleavage Motif', 'Mode'],
       ...results.peptides.map(p => [
-        p.sequence, 
+        p.sequence,
+        results.proteinId || 'N/A',  // ⭐ PROTEIN ID EN 2ème POSITION
         p.start, 
         p.end, 
         p.length,
-        p.inRange ? 'YES' : 'NO',
+        getSizeCategory(p.length),
         p.bioactivityScore.toFixed(1),
+        p.bioactivitySource === 'api' ? 'PeptideRanker API' : 'Heuristic Model',
         p.cleavageMotif,
         mode === 'strict' ? 'STRICT' : 'PERMISSIVE'
       ]),
@@ -144,7 +200,7 @@ function PeptidePredictor() {
     const url = window.URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
-    a.download = 'peptides_results.csv';
+    a.download = `${fileName}.csv`;  // ⭐ NOM DYNAMIQUE
     a.click();
   };
 
