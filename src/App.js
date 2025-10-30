@@ -28,7 +28,6 @@ function PeptidePredictor() {
 
   console.log('🔗 API_URL:', API_URL);
 
-
   // Fonctions utilitaires
   const parseSequence = (input) => {
     let cleanSeq = input.trim();
@@ -61,7 +60,7 @@ function PeptidePredictor() {
     setLoading(true);
 
     try {
-      // ⭐ Validation côté client (juste pour vérifier les caractères)
+      // Validation côté client (juste pour vérifier les caractères)
       const tempClean = parseSequence(sequence);
       
       if (!/^[ACDEFGHIKLMNPQRSTVWY*]+$/.test(tempClean)) {
@@ -71,18 +70,15 @@ function PeptidePredictor() {
       }
 
       const requestBody = {
-        sequence: sequence,  // ✅ Séquence originale avec header
+        sequence: sequence,  // Séquence originale avec header
         mode: mode,
         signalPeptideLength: params.signalPeptideLength,
         minCleavageSites: params.minCleavageSites,
         minCleavageSpacing: params.minCleavageSpacing
       };
       
-      // ⭐ DEBUG : Voir ce qu'on envoie
       console.log('🚀 REQUEST BODY:', requestBody);
-      console.log('🚀 SEQUENCE (premiers 100 chars):', sequence.substring(0, 100));
 
-      // ⭐ IMPORTANT : Envoyer la séquence ORIGINALE (avec header FASTA si présent)
       const response = await fetch(`${API_URL}/analyze`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -102,9 +98,7 @@ function PeptidePredictor() {
 
       const data = await response.json();
       
-      // ⭐ DEBUG : Vérifier ce que retourne l'API
       console.log('🔍 API Response:', data);
-      console.log('🔍 Protein ID reçu:', data.proteinId);
       
       setResults({
         sequenceLength: data.sequenceLength,
@@ -131,6 +125,23 @@ function PeptidePredictor() {
     }
   };
 
+  // ⭐ Fonction pour extraire ID - Gene Name
+  const extractIdGeneName = (proteinId) => {
+    if (!proteinId || proteinId === "N/A") {
+      return "N/A";
+    }
+
+    // Format attendu : SP|P01189|POMC_HUMAN PRO-OPIOMELANOCORTIN
+    // On veut : P01189|POMC_HUMAN
+    const match = proteinId.match(/[a-z]{2}\|([A-Z0-9]+)\|([A-Z0-9_]+)/i);
+    
+    if (match) {
+      return `${match[1]}|${match[2]}`;  // P01189|POMC_HUMAN
+    }
+    
+    return proteinId;  // Fallback si format différent
+  };
+
   const downloadResults = () => {
     if (!results) return;
 
@@ -149,46 +160,54 @@ function PeptidePredictor() {
       }
     };
 
-    // ⭐ GÉNÉRATION DU NOM DE FICHIER
+    // ⭐ Extraire ID - Gene Name
+    const idGeneName = extractIdGeneName(results.proteinId);
+
+    // Génération du nom de fichier
     let fileName = 'peptides';
     
-    if (results.proteinId && results.proteinId !== "N/A") {
-      // Extraire une partie significative du Protein ID
-      // Exemple: "sp|Q96PX8|SLIK1_HUMAN ..." → "Q96PX8_SLIK1_HUMAN"
-      let cleanId = results.proteinId;
-      
-      // Si format UniProt (sp|ID|NAME ...), extraire ID et NAME
-      const uniprotMatch = cleanId.match(/[a-z]{2}\|([A-Z0-9]+)\|([A-Z0-9_]+)/i);
-      if (uniprotMatch) {
-        // Format: ID_NAME
-        cleanId = `${uniprotMatch[1]}_${uniprotMatch[2]}`;
-      } else {
-        // Sinon, prendre les 30 premiers caractères et nettoyer
-        cleanId = cleanId.substring(0, 30)
-          .replace(/[^a-zA-Z0-9_-]/g, '_')  // Remplacer caractères spéciaux
-          .replace(/_+/g, '_')  // Supprimer underscores multiples
-          .replace(/^_|_$/g, '');  // Supprimer underscores au début/fin
-      }
-      
-      fileName = `${cleanId}_peptides`;
+    if (idGeneName !== "N/A") {
+      // Utiliser ID-GeneName pour le nom de fichier
+      // P01189|POMC_HUMAN → P01189_POMC_HUMAN
+      const cleanFileName = idGeneName.replace(/\|/g, '_');
+      fileName = `${cleanFileName}_peptides`;
     } else {
-      // Pas de Protein ID → générer un nombre aléatoire de 4 chiffres
-      const randomNum = Math.floor(1000 + Math.random() * 9000);  // 1000-9999
+      const randomNum = Math.floor(1000 + Math.random() * 9000);
       fileName = `peptides_${randomNum}`;
     }
 
+    // ⭐ CSV avec colonnes modifiées
     const csv = [
-      // ⭐ Ordre CSV : Peptide → Protein ID → Reste
-      ['Peptide', 'Protein ID', 'Start', 'End', 'Length (aa)', 'Size', 'Bioactivity', 'Source', 'Cleavage Motif', 'Mode'],
+      [
+        'ID - Gene Name',           // ⭐ MODIFIÉ : au lieu de "Protein ID"
+        'Peptide',
+        'Start', 
+        'End', 
+        'Length (aa)', 
+        'Size', 
+        'Bioactivity Score',
+        'Bioactivity Source',        // ⭐ MODIFIÉ : au lieu de "Source"
+        'UniProt Status',
+        'UniProt Name',
+        'UniProt Note',
+        'UniProt Accession',
+        'Cleavage Motif', 
+        'Peptide Detection Mode'     // ⭐ MODIFIÉ : au lieu de "Mode"
+      ],
       ...results.peptides.map(p => [
+        idGeneName,                   // ⭐ MODIFIÉ : P01189|POMC_HUMAN
         p.sequence,
-        results.proteinId || 'N/A',  // ⭐ PROTEIN ID EN 2ème POSITION
         p.start, 
         p.end, 
         p.length,
         getSizeCategory(p.length),
         p.bioactivityScore.toFixed(1),
         p.bioactivitySource === 'api' ? 'PeptideRanker API' : 'Heuristic Model',
+        p.uniprotStatus === 'exact' ? 'Exact match' : 
+        p.uniprotStatus === 'partial' ? 'Partial match' : 'Unknown',
+        p.uniprotName || 'N/A',
+        p.uniprotNote || 'N/A',
+        p.uniprotAccession || 'N/A',
         p.cleavageMotif,
         mode === 'strict' ? 'STRICT' : 'PERMISSIVE'
       ]),
@@ -200,7 +219,7 @@ function PeptidePredictor() {
     const url = window.URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
-    a.download = `${fileName}.csv`;  // ⭐ NOM DYNAMIQUE
+    a.download = `${fileName}.csv`;
     a.click();
   };
 

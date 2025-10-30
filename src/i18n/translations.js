@@ -49,13 +49,15 @@ export const translations = {
     peptidesTableTitle: "Predicted Peptides",
     peptidesInRangeNote: "peptides in optimal range (5-25 aa)",
     tableHeaderNumber: "#",
+    tableHeaderIdGeneName: "ID - Gene Name",
     tableHeaderSequence: "Sequence",
-    tableHeaderProteinId: "Protein ID",
     tableHeaderPosition: "Position",
     tableHeaderLength: "aa",
     tableHeaderBioactivity: "Bioactivity Score",
     tableHeaderBioactivitySource: "(Source: PeptideRanker API / Heuristic Model)",
     tableHeaderSize: "Size",
+    tableHeaderUniProt: "UniProt Status",
+    tableHeaderUniProtSubtitle: "(Known peptide annotation)",
     tableHeaderMotif: "Motif",
     
     // Size categories
@@ -129,13 +131,15 @@ export const translations = {
     peptidesTableTitle: "Peptides Prédits",
     peptidesInRangeNote: "peptides dans la gamme optimale (5-25 aa)",
     tableHeaderNumber: "#",
+    tableHeaderIdGeneName: "ID - Nom du Gène",
     tableHeaderSequence: "Séquence",
-    tableHeaderProteinId: "ID Protéine",
     tableHeaderPosition: "Position",
     tableHeaderLength: "aa",
     tableHeaderBioactivity: "Score de Bioactivité",
     tableHeaderBioactivitySource: "(Source : API PeptideRanker / Modèle Heuristique)",
     tableHeaderSize: "Taille",
+    tableHeaderUniProt: "Statut UniProt",
+    tableHeaderUniProtSubtitle: "(Annotation peptide connu)",
     tableHeaderMotif: "Motif",
     
     // Catégories de taille
