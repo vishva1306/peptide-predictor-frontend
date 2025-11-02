@@ -3,7 +3,7 @@ import { Loader, AlertCircle } from 'lucide-react';
 import { LanguageProvider, useTranslation } from './i18n/useTranslation';
 import Header from './components/Header';
 import Footer from './components/Footer';
-import SequenceInput from './components/SequenceInput';
+import ProteinSearch from './components/ProteinSearch';
 import ParametersPanel from './components/ParametersPanel';
 import ResultsPanel from './components/ResultsPanel';
 import PeptidesTable from './components/PeptidesTable';
@@ -11,40 +11,30 @@ import PeptidesTable from './components/PeptidesTable';
 function PeptidePredictor() {
   const { t } = useTranslation();
   
-  // États
-  const [sequence, setSequence] = useState('');
+  const [selectedProtein, setSelectedProtein] = useState(null);
   const [results, setResults] = useState(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
-  const [mode, setMode] = useState('strict');
+  const [mode, setMode] = useState('permissive');
   const [params, setParams] = useState({
     signalPeptideLength: 20,
     minCleavageSites: 4,
     minCleavageSpacing: 5,
+    maxPeptideLength: 100
   });
 
-  // API URL (utilisera les variables d'environnement Vercel)
-  const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:8000';
+  const API_URL =  'http://localhost:8000';
 
   console.log('🔗 API_URL:', API_URL);
 
-  // Fonctions utilitaires
-  const parseSequence = (input) => {
-    let cleanSeq = input.trim();
-    if (cleanSeq.startsWith('>')) {
-      cleanSeq = cleanSeq.split('\n').slice(1).join('');
-    }
-    return cleanSeq.replace(/\s/g, '').toUpperCase();
-  };
-
-  const handleFileUpload = (e) => {
-    const file = e.target.files?.[0];
-    if (file) {
-      const reader = new FileReader();
-      reader.onload = (event) => {
-        setSequence(event.target?.result || '');
-      };
-      reader.readAsText(file);
+  const handleProteinSelect = (protein) => {
+    setSelectedProtein(protein);
+    setResults(null);
+    setError('');
+    
+    if (protein && protein.recommendedParams) {
+      setParams(protein.recommendedParams);
+      console.log('📊 Auto-populated parameters:', protein.recommendedParams);
     }
   };
 
@@ -52,29 +42,21 @@ function PeptidePredictor() {
     setError('');
     setResults(null);
 
-    if (!sequence.trim()) {
-      setError(t('errorEnterSequence'));
+    if (!selectedProtein) {
+      setError(t('errorSelectProtein'));
       return;
     }
 
     setLoading(true);
 
     try {
-      // Validation côté client (juste pour vérifier les caractères)
-      const tempClean = parseSequence(sequence);
-      
-      if (!/^[ACDEFGHIKLMNPQRSTVWY*]+$/.test(tempClean)) {
-        setError(t('errorInvalidCharacters'));
-        setLoading(false);
-        return;
-      }
-
       const requestBody = {
-        sequence: sequence,  // Séquence originale avec header
+        proteinId: selectedProtein.accession,
         mode: mode,
         signalPeptideLength: params.signalPeptideLength,
         minCleavageSites: params.minCleavageSites,
-        minCleavageSpacing: params.minCleavageSpacing
+        minCleavageSpacing: params.minCleavageSpacing,
+        maxPeptideLength: params.maxPeptideLength
       };
       
       console.log('🚀 REQUEST BODY:', requestBody);
@@ -105,12 +87,13 @@ function PeptidePredictor() {
         cleavageSitesCount: data.cleavageSitesCount,
         peptides: data.peptides,
         peptidesInRange: data.peptidesInRange,
-        proteinId: data.proteinId || "N/A",
+        proteinId: `${data.proteinId}|${data.geneName}_HUMAN`,
+        geneName: data.geneName,
+        proteinName: data.proteinName,
         cleavageMotifCounts: data.peptides.reduce((acc, p) => {
           acc[p.cleavageMotif] = (acc[p.cleavageMotif] || 0) + 1;
           return acc;
-        }, {}),
-        originalSequence: tempClean
+        }, {})
       });
     } catch (err) {
       console.error('Analysis error:', err);
@@ -125,27 +108,16 @@ function PeptidePredictor() {
     }
   };
 
-  // ⭐ Fonction pour extraire ID - Gene Name
   const extractIdGeneName = (proteinId) => {
     if (!proteinId || proteinId === "N/A") {
       return "N/A";
     }
-
-    // Format attendu : SP|P01189|POMC_HUMAN PRO-OPIOMELANOCORTIN
-    // On veut : P01189|POMC_HUMAN
-    const match = proteinId.match(/[a-z]{2}\|([A-Z0-9]+)\|([A-Z0-9_]+)/i);
-    
-    if (match) {
-      return `${match[1]}|${match[2]}`;  // P01189|POMC_HUMAN
-    }
-    
-    return proteinId;  // Fallback si format différent
+    return proteinId;
   };
 
   const downloadResults = () => {
     if (!results) return;
 
-    // Fonction pour déterminer la catégorie de taille
     const getSizeCategory = (length) => {
       if (length < 3) {
         return 'Tiny (<3 aa)';
@@ -160,15 +132,11 @@ function PeptidePredictor() {
       }
     };
 
-    // ⭐ Extraire ID - Gene Name
     const idGeneName = extractIdGeneName(results.proteinId);
 
-    // Génération du nom de fichier
     let fileName = 'peptides';
     
     if (idGeneName !== "N/A") {
-      // Utiliser ID-GeneName pour le nom de fichier
-      // P01189|POMC_HUMAN → P01189_POMC_HUMAN
       const cleanFileName = idGeneName.replace(/\|/g, '_');
       fileName = `${cleanFileName}_peptides`;
     } else {
@@ -176,33 +144,32 @@ function PeptidePredictor() {
       fileName = `peptides_${randomNum}`;
     }
 
-    // ⭐ CSV avec colonnes modifiées
     const csv = [
       [
-        'ID - Gene Name',           // ⭐ MODIFIÉ : au lieu de "Protein ID"
+        'ID - Gene Name',
         'Peptide',
         'Start', 
         'End', 
         'Length (aa)', 
         'Size', 
         'Bioactivity Score',
-        'Bioactivity Source',        // ⭐ MODIFIÉ : au lieu de "Source"
+        'Bioactivity Source',
         'UniProt Status',
         'UniProt Name',
         'UniProt Note',
         'UniProt Accession',
         'Cleavage Motif', 
-        'Peptide Detection Mode'     // ⭐ MODIFIÉ : au lieu de "Mode"
+        'Peptide Detection Mode'
       ],
       ...results.peptides.map(p => [
-        idGeneName,                   // ⭐ MODIFIÉ : P01189|POMC_HUMAN
+        idGeneName,
         p.sequence,
         p.start, 
         p.end, 
         p.length,
         getSizeCategory(p.length),
         p.bioactivityScore.toFixed(1),
-        p.bioactivitySource === 'api' ? 'PeptideRanker API' : 'Heuristic Model',
+        p.bioactivitySource === 'api' ? 'PeptideRanker API' : 'Lab ML Bioactivity Model',
         p.uniprotStatus === 'exact' ? 'Exact match' : 
         p.uniprotStatus === 'partial' ? 'Partial match' : 'Unknown',
         p.uniprotName || 'N/A',
@@ -229,38 +196,45 @@ function PeptidePredictor() {
         <Header />
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          {/* Colonne gauche : Input + Paramètres */}
           <div className="lg:col-span-2 space-y-6">
-            <SequenceInput 
-              sequence={sequence}
-              setSequence={setSequence}
-              onFileUpload={handleFileUpload}
-            />
+            
+            <div className="bg-slate-800 rounded-lg p-6 border border-slate-700">
+              <h3 className="text-white font-semibold mb-3">
+                {t('proteinSearchTitle')}
+              </h3>
+              <ProteinSearch 
+                onProteinSelect={handleProteinSelect}
+                apiUrl={API_URL}
+              />
+            </div>
 
-            <ParametersPanel 
-              mode={mode}
-              setMode={setMode}
-              params={params}
-              setParams={setParams}
-            />
+            {selectedProtein && (
+              <>
+                <ParametersPanel 
+                  mode={mode}
+                  setMode={setMode}
+                  params={params}
+                  setParams={setParams}
+                  recommendedParams={selectedProtein.recommendedParams}
+                />
 
-            {/* Bouton Analyser */}
-            <button
-              onClick={handleAnalyze}
-              disabled={loading}
-              className="w-full py-3 bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white font-semibold rounded-lg transition disabled:opacity-50 flex items-center justify-center gap-2"
-            >
-              {loading ? (
-                <>
-                  <Loader size={20} className="animate-spin" />
-                  {t('analyzing')}
-                </>
-              ) : (
-                t('analyzeButton')
-              )}
-            </button>
+                <button
+                  onClick={handleAnalyze}
+                  disabled={loading}
+                  className="w-full py-3 bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white font-semibold rounded-lg transition disabled:opacity-50 flex items-center justify-center gap-2"
+                >
+                  {loading ? (
+                    <>
+                      <Loader size={20} className="animate-spin" />
+                      {t('analyzing')}
+                    </>
+                  ) : (
+                    t('analyzeButton')
+                  )}
+                </button>
+              </>
+            )}
 
-            {/* Message d'erreur */}
             {error && (
               <div className="bg-red-900/30 border border-red-700 rounded-lg p-4 flex gap-3">
                 <AlertCircle size={20} className="text-red-400 flex-shrink-0 mt-0.5" />
@@ -269,7 +243,6 @@ function PeptidePredictor() {
             )}
           </div>
 
-          {/* Colonne droite : Résultats */}
           <div className="lg:col-span-1">
             <ResultsPanel 
               results={results}
@@ -278,10 +251,8 @@ function PeptidePredictor() {
           </div>
         </div>
 
-        {/* Tableau des peptides */}
         <PeptidesTable results={results} />
 
-        {/* Footer */}
         <Footer />
       </div>
     </div>

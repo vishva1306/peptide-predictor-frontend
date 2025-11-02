@@ -5,8 +5,24 @@ export const translations = {
     subtitle: "Analyze protein sequences with PCSK1/3 cleavage detection",
     labWebsite: "Svensson Lab Website",
     
+    // Protein Search
+    proteinSearchTitle: "Add Human Secreted Protein",
+    proteinSearchPlaceholderGeneName: "Example: POMC, INS, GCG",
+    proteinSearchPlaceholderAccession: "Example: P01189, P01308",
+    proteinSearchNoResults: "No secreted proteins found for \"{query}\"",
+    proteinSearchSelected: "Selected Protein",
+    searchByGeneName: "Gene Name",
+    searchByAccession: "UniProt ID",
+    searchButton: "Search",
+    searching: "Searching...",
+    selectCorrectProtein: "Select the correct protein",
+    resultsFound: "results",
+    validateSelection: "Validate Selection",
+    viewSequence: "View Sequence",
+    hideSequence: "Hide Sequence",
+    
     // Detection modes
-    modeTitle: "Detection Mode",
+    modeTitle: "Peptide Detection Mode",
     modeStrict: "STRICT Mode",
     modeStrictDesc: "Complete regex from Nature paper. Fewer results but more reliable.",
     modeStrictNote: "Constraints: lookbehind (?<!K|R), strict spacing verification",
@@ -14,14 +30,10 @@ export const translations = {
     modePermissiveDesc: "Simplified regex. More results but may include false positives.",
     modePermissiveNote: "Reduced constraints: sensitive detection",
     
-    // Sequence input
-    sequenceTitle: "Protein Sequence",
-    sequencePlaceholder: "Paste your FASTA or protein sequence here...",
-    uploadButton: "Upload",
-    clearButton: "Clear",
-    
     // Parameters
-    parametersTitle: "Parameters",
+    parametersTitle: "Analysis Parameters",
+    recommendedParametersNote: "Recommended parameters based on UniProt annotation",
+    resetToRecommended: "Reset to Recommended",
     signalPeptideLength: "Signal peptide length",
     signalPeptideLengthUnit: "aa",
     signalPeptideDesc: "Cleavage sites before this position are ignored",
@@ -30,10 +42,15 @@ export const translations = {
     minCleavageSpacing: "Min. spacing",
     minCleavageSpacingUnit: "aa",
     minCleavageSpacingDesc: "Minimum distance between two cleavage sites",
+    maxPeptideLength: "Max. peptide length",
+    maxPeptideLengthUnit: "aa",
+    maxPeptideLengthDesc: "Maximum length of predicted peptides (filter out longer ones)",
     
     // Actions
     analyzeButton: "Analyze",
     analyzing: "Analysis in progress...",
+    uploadButton: "Upload",
+    clearButton: "Clear",
     
     // Results
     resultsTitle: "Results",
@@ -54,7 +71,7 @@ export const translations = {
     tableHeaderPosition: "Position",
     tableHeaderLength: "aa",
     tableHeaderBioactivity: "Bioactivity Score",
-    tableHeaderBioactivitySource: "(Source: PeptideRanker API / Heuristic Model)",
+    tableHeaderBioactivitySource: "(Source: PeptideRanker API / Lab ML Bioactivity Model)",
     tableHeaderSize: "Size",
     tableHeaderUniProt: "UniProt Status",
     tableHeaderUniProtSubtitle: "(Known peptide annotation)",
@@ -71,7 +88,7 @@ export const translations = {
     outOfRange: "Out of range",
     
     // Errors
-    errorEnterSequence: "Please enter a protein sequence",
+    errorSelectProtein: "Please select a protein",
     errorInvalidCharacters: "The sequence contains invalid characters.",
     errorServer: "Error:",
     
@@ -87,8 +104,24 @@ export const translations = {
     subtitle: "Analysez les séquences protéiques avec détection PCSK1/3",
     labWebsite: "Site du Svensson Lab",
     
+    // Recherche Protéine
+    proteinSearchTitle: "Ajouter Protéine Sécrétée Humaine",
+    proteinSearchPlaceholderGeneName: "Exemple: POMC, INS, GCG",
+    proteinSearchPlaceholderAccession: "Exemple: P01189, P01308",
+    proteinSearchNoResults: "Aucune protéine sécrétée trouvée pour \"{query}\"",
+    proteinSearchSelected: "Protéine Sélectionnée",
+    searchByGeneName: "Nom du Gène",
+    searchByAccession: "ID UniProt",
+    searchButton: "Rechercher",
+    searching: "Recherche...",
+    selectCorrectProtein: "Sélectionnez la bonne protéine",
+    resultsFound: "résultats",
+    validateSelection: "Valider la Sélection",
+    viewSequence: "Voir la Séquence",
+    hideSequence: "Masquer la Séquence",
+    
     // Modes de détection
-    modeTitle: "Mode de détection",
+    modeTitle: "Mode de Détection de Peptides",
     modeStrict: "Mode STRICT",
     modeStrictDesc: "Regex complète du papier Nature. Moins de résultats mais plus fiables.",
     modeStrictNote: "Contraintes: lookbehind (?<!K|R), vérification espacement stricte",
@@ -96,14 +129,10 @@ export const translations = {
     modePermissiveDesc: "Regex simplifiée. Plus de résultats mais peut inclure des faux positifs.",
     modePermissiveNote: "Contraintes réduites: détection sensible",
     
-    // Saisie séquence
-    sequenceTitle: "Séquence Protéique",
-    sequencePlaceholder: "Collez votre séquence FASTA ou protéique ici...",
-    uploadButton: "Télécharger",
-    clearButton: "Effacer",
-    
     // Paramètres
-    parametersTitle: "Paramètres",
+    parametersTitle: "Paramètres d'Analyse",
+    recommendedParametersNote: "Paramètres recommandés basés sur l'annotation UniProt",
+    resetToRecommended: "Réinitialiser aux Recommandés",
     signalPeptideLength: "Longueur du peptide signal",
     signalPeptideLengthUnit: "aa",
     signalPeptideDesc: "Sites de clivage avant cette position sont ignorés",
@@ -112,10 +141,15 @@ export const translations = {
     minCleavageSpacing: "Min. espacement",
     minCleavageSpacingUnit: "aa",
     minCleavageSpacingDesc: "Distance minimum entre deux sites de clivage",
+    maxPeptideLength: "Max. longueur peptide",
+    maxPeptideLengthUnit: "aa",
+    maxPeptideLengthDesc: "Longueur maximale des peptides prédits (filtrer les plus longs)",
     
     // Actions
     analyzeButton: "Analyser",
     analyzing: "Analyse en cours...",
+    uploadButton: "Télécharger",
+    clearButton: "Effacer",
     
     // Résultats
     resultsTitle: "Résultats",
@@ -136,7 +170,7 @@ export const translations = {
     tableHeaderPosition: "Position",
     tableHeaderLength: "aa",
     tableHeaderBioactivity: "Score de Bioactivité",
-    tableHeaderBioactivitySource: "(Source : API PeptideRanker / Modèle Heuristique)",
+    tableHeaderBioactivitySource: "(Source : API PeptideRanker / Modèle ML Lab Bioactivité)",
     tableHeaderSize: "Taille",
     tableHeaderUniProt: "Statut UniProt",
     tableHeaderUniProtSubtitle: "(Annotation peptide connu)",
@@ -153,7 +187,7 @@ export const translations = {
     outOfRange: "Hors gamme",
     
     // Erreurs
-    errorEnterSequence: "Veuillez entrer une séquence protéique",
+    errorSelectProtein: "Veuillez sélectionner une protéine",
     errorInvalidCharacters: "La séquence contient des caractères invalides.",
     errorServer: "Erreur:",
     
