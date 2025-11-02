@@ -1,9 +1,12 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { useTranslation } from '../i18n/useTranslation';
 import { ExternalLink } from 'lucide-react';
+import PTMBadge from './PTMBadge';
+import PTMModal from './PTMModal';
 
 export default function PeptidesTable({ results }) {
   const { t } = useTranslation();
+  const [selectedPeptide, setSelectedPeptide] = useState(null);
 
   if (!results || !results.peptides) return null;
 
@@ -61,175 +64,205 @@ export default function PeptidesTable({ results }) {
   const idGeneName = getIdGeneName();
 
   return (
-    <div className="mt-6 bg-slate-800 rounded-lg border border-slate-700 overflow-hidden">
-      <div className="p-6 border-b border-slate-700">
-        <h2 className="text-xl font-semibold text-white">
-          {t('peptidesTableTitle')} ({results.peptides.length})
-        </h2>
-        <p className="text-sm text-slate-400 mt-1">
-          {results.peptidesInRange} {t('peptidesInRangeNote')}
-        </p>
-        {idGeneName !== 'N/A' && (
-          <p className="text-xs text-slate-500 mt-2 font-mono">
-            {t('tableHeaderIdGeneName')}: {idGeneName}
+    <>
+      <div className="mt-6 bg-slate-800 rounded-lg border border-slate-700 overflow-hidden">
+        <div className="p-6 border-b border-slate-700">
+          <h2 className="text-xl font-semibold text-white">
+            {t('peptidesTableTitle')} ({results.peptides.length})
+          </h2>
+          <p className="text-sm text-slate-400 mt-1">
+            {results.peptidesInRange} {t('peptidesInRangeNote')}
           </p>
-        )}
-      </div>
+          {idGeneName !== 'N/A' && (
+            <p className="text-xs text-slate-500 mt-2 font-mono">
+              {t('tableHeaderIdGeneName')}: {idGeneName}
+            </p>
+          )}
+        </div>
 
-      <div className="overflow-x-auto">
-        <table className="w-full text-sm">
-          <thead className="bg-slate-900 border-b border-slate-700">
-            <tr>
-              <th className="px-4 py-3 text-left text-slate-300 font-semibold">{t('tableHeaderNumber')}</th>
-              <th className="px-4 py-3 text-left text-slate-300 font-semibold">{t('tableHeaderIdGeneName')}</th>
-              <th className="px-4 py-3 text-left text-slate-300 font-semibold">{t('tableHeaderSequence')}</th>
-              <th className="px-4 py-3 text-left text-slate-300 font-semibold">{t('tableHeaderPosition')}</th>
-              <th className="px-4 py-3 text-left text-slate-300 font-semibold">{t('tableHeaderLength')}</th>
-              <th className="px-4 py-3 text-left text-slate-300 font-semibold">
-                <div>
-                  <div>{t('tableHeaderBioactivity')}</div>
-                  <div className="text-xs font-normal text-slate-500 mt-0.5">
-                    {t('tableHeaderBioactivitySource')}
-                  </div>
-                </div>
-              </th>
-              <th className="px-4 py-3 text-left text-slate-300 font-semibold">{t('tableHeaderSize')}</th>
-              <th className="px-4 py-3 text-left text-slate-300 font-semibold">
-                <div>
-                  <div>{t('tableHeaderUniProt')}</div>
-                  <div className="text-xs font-normal text-slate-500 mt-0.5">
-                    {t('tableHeaderUniProtSubtitle')}
-                  </div>
-                </div>
-              </th>
-              <th className="px-4 py-3 text-left text-slate-300 font-semibold">{t('tableHeaderMotif')}</th>
-            </tr>
-          </thead>
-
-          <tbody>
-            {results.peptides.length > 0 ? (
-              results.peptides.map((peptide, idx) => {
-                const sizeCategory = getSizeCategory(peptide.length);
-                const bioScore = typeof peptide.bioactivityScore === 'number' ? peptide.bioactivityScore : 0;
-
-                return (
-                  <tr
-                    key={idx}
-                    className={`border-b border-slate-700 hover:bg-slate-700/50 ${
-                      peptide.inRange ? 'bg-slate-800/50' : 'bg-slate-800/20'
-                    }`}
-                  >
-                    <td className="px-4 py-3 text-slate-400">{idx + 1}</td>
-
-                    <td className="px-4 py-3 font-mono text-blue-300 text-xs">{idGeneName}</td>
-
-                    <td className="px-4 py-3 font-mono text-blue-300 text-xs break-all">
-                      {peptide.sequence}
-                    </td>
-
-                    <td className="px-4 py-3 text-slate-400 text-xs">
-                      {peptide.start}-{peptide.end}
-                    </td>
-
-                    <td className="px-4 py-3 text-slate-400 text-xs font-semibold">
-                      {peptide.length}
-                    </td>
-
-                    <td className="px-4 py-3">
-                      <div className="flex items-center gap-2">
-                        <span className="text-sm">
-                          {peptide.bioactivitySource === 'api' ? '🤖' : '📊'}
-                        </span>
-                        <span className="text-xs font-semibold text-white">
-                          {bioScore.toFixed(1)}/100
-                        </span>
-                        <div className="w-16 bg-slate-700 rounded-full h-2">
-                          <div
-                            className={`h-2 rounded-full transition-all ${
-                              bioScore >= 70
-                                ? 'bg-green-500'
-                                : bioScore >= 50
-                                ? 'bg-yellow-500'
-                                : 'bg-red-500'
-                            }`}
-                            style={{ width: `${bioScore}%` }}
-                          ></div>
-                        </div>
-                      </div>
-                    </td>
-
-                    <td className="px-4 py-3">
-                      <span className={`text-xs px-2 py-1 rounded ${sizeCategory.color}`}>
-                        {sizeCategory.label}
-                        <span className="ml-1 opacity-70">({sizeCategory.range})</span>
-                      </span>
-                    </td>
-
-                    <td className="px-4 py-3">
-                      {peptide.uniprotStatus === 'exact' ? (
-                        <div className="space-y-1">
-                          <div className="flex items-center gap-1">
-                            <span className="text-green-400 text-xs font-semibold">✅ Exact match</span>
-                          </div>
-                          <div className="text-xs text-slate-300 font-semibold">
-                            {peptide.uniprotName}
-                          </div>
-                          {peptide.uniprotAccession && (
-                            <a
-                              href={`https://www.uniprot.org/uniprotkb/${peptide.uniprotAccession}`}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              className="text-xs text-blue-400 hover:text-blue-300 transition inline-flex items-center gap-1"
-                            >
-                              {peptide.uniprotAccession}
-                              <ExternalLink size={12} />
-                            </a>
-                          )}
-                        </div>
-                      ) : peptide.uniprotStatus === 'partial' ? (
-                        <div className="space-y-1">
-                          <div className="flex items-center gap-1">
-                            <span className="text-yellow-400 text-xs font-semibold">⚠️ Partial match</span>
-                          </div>
-                          {peptide.uniprotNote && (
-                            <div className="text-xs text-slate-400 italic">{peptide.uniprotNote}</div>
-                          )}
-                          <div className="text-xs text-slate-300 font-semibold">
-                            {peptide.uniprotName}
-                          </div>
-                          {peptide.uniprotAccession && (
-                            <a
-                              href={`https://www.uniprot.org/uniprotkb/${peptide.uniprotAccession}`}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              className="text-xs text-blue-400 hover:text-blue-300 transition inline-flex items-center gap-1"
-                            >
-                              {peptide.uniprotAccession}
-                              <ExternalLink size={12} />
-                            </a>
-                          )}
-                        </div>
-                      ) : (
-                        <span className="text-xs text-slate-500">❌ Unknown</span>
-                      )}
-                    </td>
-
-                    <td className="px-4 py-3 text-slate-400 font-mono text-xs">
-                      {peptide.cleavageMotif}
-                    </td>
-                  </tr>
-                );
-              })
-            ) : (
+        <div className="overflow-x-auto">
+          <table className="w-full text-sm">
+            <thead className="bg-slate-900 border-b border-slate-700">
               <tr>
-                <td colSpan={9} className="px-4 py-4 text-center text-slate-500">
-                  No peptides found with these parameters
-                </td>
+                <th className="px-4 py-3 text-left text-slate-300 font-semibold">{t('tableHeaderNumber')}</th>
+                <th className="px-4 py-3 text-left text-slate-300 font-semibold">{t('tableHeaderIdGeneName')}</th>
+                <th className="px-4 py-3 text-left text-slate-300 font-semibold">{t('tableHeaderSequence')}</th>
+                <th className="px-4 py-3 text-left text-slate-300 font-semibold">{t('tableHeaderPosition')}</th>
+                <th className="px-4 py-3 text-left text-slate-300 font-semibold">{t('tableHeaderLength')}</th>
+                <th className="px-4 py-3 text-left text-slate-300 font-semibold">
+                  <div>
+                    <div>{t('tableHeaderBioactivity')}</div>
+                    <div className="text-xs font-normal text-slate-500 mt-0.5">
+                      {t('tableHeaderBioactivitySource')}
+                    </div>
+                  </div>
+                </th>
+                <th className="px-4 py-3 text-left text-slate-300 font-semibold">{t('tableHeaderSize')}</th>
+                <th className="px-4 py-3 text-left text-slate-300 font-semibold">
+                  <div>
+                    <div>{t('tableHeaderUniProt')}</div>
+                    <div className="text-xs font-normal text-slate-500 mt-0.5">
+                      {t('tableHeaderUniProtSubtitle')}
+                    </div>
+                  </div>
+                </th>
+                <th className="px-4 py-3 text-left text-slate-300 font-semibold">{t('tableHeaderPTMs')}</th>
+                <th className="px-4 py-3 text-left text-slate-300 font-semibold">{t('tableHeaderMotif')}</th>
               </tr>
-            )}
-          </tbody>
-        </table>
+            </thead>
+
+            <tbody>
+              {results.peptides.length > 0 ? (
+                results.peptides.map((peptide, idx) => {
+                  const sizeCategory = getSizeCategory(peptide.length);
+                  const bioScore = typeof peptide.bioactivityScore === 'number' ? peptide.bioactivityScore : 0;
+
+                  return (
+                    <tr
+                      key={idx}
+                      className={`border-b border-slate-700 hover:bg-slate-700/50 ${
+                        peptide.inRange ? 'bg-slate-800/50' : 'bg-slate-800/20'
+                      }`}
+                    >
+                      <td className="px-4 py-3 text-slate-400">{idx + 1}</td>
+
+                      <td className="px-4 py-3 font-mono text-blue-300 text-xs">{idGeneName}</td>
+
+                      <td className="px-4 py-3 font-mono text-blue-300 text-xs break-all">
+                        {peptide.sequence}
+                      </td>
+
+                      <td className="px-4 py-3 text-slate-400 text-xs">
+                        {peptide.start}-{peptide.end}
+                      </td>
+
+                      <td className="px-4 py-3 text-slate-400 text-xs font-semibold">
+                        {peptide.length}
+                      </td>
+
+                      <td className="px-4 py-3">
+                        <div className="flex items-center gap-2">
+                          <span className="text-sm">
+                            {peptide.bioactivitySource === 'api' ? '🤖' : '📊'}
+                          </span>
+                          <span className="text-xs font-semibold text-white">
+                            {bioScore.toFixed(1)}/100
+                          </span>
+                          <div className="w-16 bg-slate-700 rounded-full h-2">
+                            <div
+                              className={`h-2 rounded-full transition-all ${
+                                bioScore >= 70
+                                  ? 'bg-green-500'
+                                  : bioScore >= 50
+                                  ? 'bg-yellow-500'
+                                  : 'bg-red-500'
+                              }`}
+                              style={{ width: `${bioScore}%` }}
+                            ></div>
+                          </div>
+                        </div>
+                      </td>
+
+                      <td className="px-4 py-3">
+                        <span className={`text-xs px-2 py-1 rounded ${sizeCategory.color}`}>
+                          {sizeCategory.label}
+                          <span className="ml-1 opacity-70">({sizeCategory.range})</span>
+                        </span>
+                      </td>
+
+                      <td className="px-4 py-3">
+                        {peptide.uniprotStatus === 'exact' ? (
+                          <div className="space-y-1">
+                            <div className="flex items-center gap-1">
+                              <span className="text-green-400 text-xs font-semibold">✅ Exact match</span>
+                            </div>
+                            <div className="text-xs text-slate-300 font-semibold">
+                              {peptide.uniprotName}
+                            </div>
+                            {peptide.uniprotAccession && (
+                              <a
+                                href={`https://www.uniprot.org/uniprotkb/${peptide.uniprotAccession}`}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="text-xs text-blue-400 hover:text-blue-300 transition inline-flex items-center gap-1"
+                              >
+                                {peptide.uniprotAccession}
+                                <ExternalLink size={12} />
+                              </a>
+                            )}
+                          </div>
+                        ) : peptide.uniprotStatus === 'partial' ? (
+                          <div className="space-y-1">
+                            <div className="flex items-center gap-1">
+                              <span className="text-yellow-400 text-xs font-semibold">⚠️ Partial match</span>
+                            </div>
+                            {peptide.uniprotNote && (
+                              <div className="text-xs text-slate-400 italic">{peptide.uniprotNote}</div>
+                            )}
+                            <div className="text-xs text-slate-300 font-semibold">
+                              {peptide.uniprotName}
+                            </div>
+                            {peptide.uniprotAccession && (
+                              <a
+                                href={`https://www.uniprot.org/uniprotkb/${peptide.uniprotAccession}`}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="text-xs text-blue-400 hover:text-blue-300 transition inline-flex items-center gap-1"
+                              >
+                                {peptide.uniprotAccession}
+                                <ExternalLink size={12} />
+                              </a>
+                            )}
+                          </div>
+                        ) : (
+                          <span className="text-xs text-slate-500">❌ Unknown</span>
+                        )}
+                      </td>
+
+                      {/* ⭐ NOUVELLE COLONNE PTMs */}
+                      <td className="px-4 py-3">
+                        {peptide.ptms && peptide.ptms.length > 0 ? (
+                          <div className="space-y-1">
+                            {peptide.ptms.map((ptm, ptmIdx) => (
+                              <PTMBadge key={ptmIdx} ptm={ptm} />
+                            ))}
+                            <button
+                              onClick={() => setSelectedPeptide(peptide)}
+                              className="text-xs text-blue-400 hover:text-blue-300 underline mt-1"
+                            >
+                              {t('viewModified')}
+                            </button>
+                          </div>
+                        ) : (
+                          <span className="text-xs text-slate-500">—</span>
+                        )}
+                      </td>
+
+                      <td className="px-4 py-3 text-slate-400 font-mono text-xs">
+                        {peptide.cleavageMotif}
+                      </td>
+                    </tr>
+                  );
+                })
+              ) : (
+                <tr>
+                  <td colSpan={10} className="px-4 py-4 text-center text-slate-500">
+                    No peptides found with these parameters
+                  </td>
+                </tr>
+              )}
+            </tbody>
+          </table>
+        </div>
       </div>
-    </div>
+
+      {/* PTM Modal */}
+      {selectedPeptide && (
+        <PTMModal
+          peptide={selectedPeptide}
+          onClose={() => setSelectedPeptide(null)}
+        />
+      )}
+    </>
   );
 }
