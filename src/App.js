@@ -144,37 +144,43 @@ function PeptidePredictor() {
       fileName = `peptides_${randomNum}`;
     }
 
+    // Format PTMs for CSV
+    const formatPTMs = (ptms) => {
+      if (!ptms || ptms.length === 0) return 'None';
+      return ptms.map(p => p.shortName).join('; ');
+    };
+
     const csv = [
       [
+        '#',
         'ID - Gene Name',
-        'Peptide',
-        'Start', 
-        'End', 
+        'Sequence',
+        'Position',
         'Length (aa)', 
-        'Size', 
         'Bioactivity Score',
         'Bioactivity Source',
+        'Size', 
         'UniProt Status',
         'UniProt Name',
-        'UniProt Note',
-        'UniProt Accession',
+        'PTMs Detected',
+        'Modified Sequence',
         'Cleavage Motif', 
-        'Peptide Detection Mode'
+        'Detection Mode'
       ],
-      ...results.peptides.map(p => [
+      ...results.peptides.map((p, idx) => [
+        idx + 1,
         idGeneName,
         p.sequence,
-        p.start, 
-        p.end, 
+        `${p.start}-${p.end}`,
         p.length,
-        getSizeCategory(p.length),
         p.bioactivityScore.toFixed(1),
         p.bioactivitySource === 'api' ? 'PeptideRanker API' : 'Lab ML Bioactivity Model',
-        p.uniprotStatus === 'exact' ? 'Exact match' : 
-        p.uniprotStatus === 'partial' ? 'Partial match' : 'Unknown',
+        getSizeCategory(p.length),
+        p.uniprotStatus === 'exact' ? 'Exact' : 
+        p.uniprotStatus === 'partial' ? 'Partial' : 'Unknown',
         p.uniprotName || 'N/A',
-        p.uniprotNote || 'N/A',
-        p.uniprotAccession || 'N/A',
+        formatPTMs(p.ptms),
+        p.modifiedSequence || p.sequence,
         p.cleavageMotif,
         mode === 'strict' ? 'STRICT' : 'PERMISSIVE'
       ]),

@@ -51,6 +51,7 @@ export const translations = {
     analyzing: "Analysis in progress...",
     uploadButton: "Upload",
     clearButton: "Clear",
+    close: "Close",
     
     // Results
     resultsTitle: "Results",
@@ -75,7 +76,15 @@ export const translations = {
     tableHeaderSize: "Size",
     tableHeaderUniProt: "UniProt Status",
     tableHeaderUniProtSubtitle: "(Known peptide annotation)",
+    tableHeaderPTMs: "PTMs",
     tableHeaderMotif: "Motif",
+    
+    // PTMs
+    viewModified: "View modified",
+    modifiedPeptide: "Modified Peptide",
+    originalSequence: "Original Sequence",
+    modifiedSequence: "Modified Sequence",
+    modificationsDetected: "Modifications Detected",
     
     // Size categories
     sizeTiny: "Tiny",
@@ -150,6 +159,7 @@ export const translations = {
     analyzing: "Analyse en cours...",
     uploadButton: "Télécharger",
     clearButton: "Effacer",
+    close: "Fermer",
     
     // Résultats
     resultsTitle: "Résultats",
@@ -174,7 +184,15 @@ export const translations = {
     tableHeaderSize: "Taille",
     tableHeaderUniProt: "Statut UniProt",
     tableHeaderUniProtSubtitle: "(Annotation peptide connu)",
+    tableHeaderPTMs: "PTMs",
     tableHeaderMotif: "Motif",
+    
+    // PTMs
+    viewModified: "Voir modifié",
+    modifiedPeptide: "Peptide Modifié",
+    originalSequence: "Séquence Originale",
+    modifiedSequence: "Séquence Modifiée",
+    modificationsDetected: "Modifications Détectées",
     
     // Catégories de taille
     sizeTiny: "Minuscule",
