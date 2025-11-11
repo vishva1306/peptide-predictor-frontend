@@ -2,11 +2,22 @@ import React, { useState } from 'react';
 import { Search, Loader, CheckCircle, ChevronDown, ChevronUp } from 'lucide-react';
 import { useTranslation } from '../i18n/useTranslation';
 import ToggleSwitch from './ToggleSwitch';
+import BatchUpload from './BatchUpload';
 
-export default function ProteinSearch({ onProteinSelect, apiUrl }) {
+export default function ProteinSearch({ 
+  onProteinSelect, 
+  onBatchUpload, 
+  apiUrl, 
+  mode,
+  uploadedProteins,
+  uploadedFileName,
+  onChangeFile,
+  onClearConfirm,
+  hasResults
+}) {
   const { t } = useTranslation();
   
-  const [searchType, setSearchType] = useState('gene_name'); // 'gene_name' ou 'accession'
+  const [searchType, setSearchType] = useState('gene_name');
   const [query, setQuery] = useState('');
   const [results, setResults] = useState([]);
   const [loading, setLoading] = useState(false);
@@ -14,6 +25,7 @@ export default function ProteinSearch({ onProteinSelect, apiUrl }) {
   const [selectedFromList, setSelectedFromList] = useState(null);
   const [showSequence, setShowSequence] = useState(false);
   const [hasSearched, setHasSearched] = useState(false);
+  const [batchError, setBatchError] = useState('');
 
   // Handler : Search
   const handleSearch = async () => {
@@ -33,7 +45,6 @@ export default function ProteinSearch({ onProteinSelect, apiUrl }) {
         const data = await response.json();
         setResults(data);
         
-        // Validation auto si 1 seul résultat
         if (data.length === 1) {
           handleValidate(data[0]);
         }
@@ -71,13 +82,107 @@ export default function ProteinSearch({ onProteinSelect, apiUrl }) {
 
   // Handler : Clear
   const handleClear = () => {
-    setQuery('');
-    setResults([]);
-    setSelectedProtein(null);
-    setSelectedFromList(null);
-    setShowSequence(false);
-    setHasSearched(false);
-    onProteinSelect(null);
+    // Si des résultats existent, demander confirmation
+    if (hasResults) {
+      onClearConfirm();
+    } else {
+      // Sinon clear directement
+      setQuery('');
+      setResults([]);
+      setSelectedProtein(null);
+      setSelectedFromList(null);
+      setShowSequence(false);
+      setHasSearched(false);
+      onProteinSelect(null);
+    }
+  };
+
+  // Handler : Batch File Upload
+  const handleBatchFileUpload = async (file) => {
+    setBatchError('');
+
+    // Vérifier extension
+    if (!file.name.endsWith('.txt')) {
+      setBatchError(t('errorFileFormat'));
+      return;
+    }
+
+    try {
+      const text = await file.text();
+      const lines = text.split('\n')
+        .map(line => line.trim())
+        .filter(line => line.length > 0);
+
+      if (lines.length === 0) {
+        setBatchError(t('errorFileEmpty'));
+        return;
+      }
+
+      if (lines.length > 15) {
+        setBatchError(t('errorTooManyProteins'));
+        return;
+      }
+
+      // Vérifier que ce sont des IDs UniProt valides (format basique)
+      const validIdPattern = /^[OPQ][0-9][A-Z0-9]{3}[0-9]$|^[A-NR-Z][0-9]([A-Z][A-Z0-9]{2}[0-9]){1,2}$/;
+      const validIds = lines.filter(line => validIdPattern.test(line));
+
+      if (validIds.length === 0) {
+        setBatchError(t('errorFileEmpty'));
+        return;
+      }
+
+      // Dédupliquer les IDs
+      const uniqueIds = [...new Set(validIds)];
+      
+      if (uniqueIds.length < validIds.length) {
+        const duplicatesCount = validIds.length - uniqueIds.length;
+        console.log(`⚠️ Removed ${duplicatesCount} duplicate ID(s)`);
+      }
+
+      console.log('📄 Unique protein IDs found:', uniqueIds);
+
+      // Vérifier existence des protéines
+      setLoading(true);
+      const foundProteins = [];
+      const notFoundIds = [];
+
+      for (const proteinId of uniqueIds) {
+        try {
+          const response = await fetch(`${apiUrl}/api/proteins/${proteinId}`);
+          if (response.ok) {
+            const protein = await response.json();
+            foundProteins.push(protein);
+          } else {
+            notFoundIds.push(proteinId);
+          }
+        } catch (error) {
+          console.error(`Error fetching ${proteinId}:`, error);
+          notFoundIds.push(proteinId);
+        }
+      }
+
+      setLoading(false);
+
+      if (foundProteins.length === 0) {
+        setBatchError(t('noProteinsFound'));
+        return;
+      }
+
+      // Afficher warning si certaines protéines non trouvées
+      if (notFoundIds.length > 0) {
+        setBatchError(
+          `${notFoundIds.length} ${t('errorSomeNotFound')} ${notFoundIds.join(', ')}`
+        );
+      }
+
+      // Callback avec les protéines trouvées ET le nom du fichier
+      onBatchUpload(foundProteins, file.name);
+
+    } catch (error) {
+      console.error('File processing error:', error);
+      setBatchError(t('errorFileEmpty'));
+    }
   };
 
   const getPlaceholder = () => {
@@ -89,19 +194,33 @@ export default function ProteinSearch({ onProteinSelect, apiUrl }) {
   };
 
   // Options pour le toggle
-  const toggleOptions = [
+  const getSingleOptions = () => [
     { value: 'gene_name', label: t('searchByGeneName') },
     { value: 'accession', label: t('searchByAccession') }
   ];
 
+  // Si mode batch, afficher BatchUpload
+  if (mode === 'batch') {
+    return (
+      <BatchUpload
+        onFileUpload={handleBatchFileUpload}
+        uploadedProteins={uploadedProteins}
+        uploadedFileName={uploadedFileName}
+        onChangeFile={onChangeFile}
+        error={batchError}
+        hasResults={hasResults}
+      />
+    );
+  }
+
+  // Mode single
   return (
     <div className="space-y-4">
-      
-      {/* ⭐ NOUVEAU : Toggle Switch stylisé */}
+      {/* Toggle Single options */}
       {!selectedProtein && (
         <div className="flex justify-start">
           <ToggleSwitch
-            options={toggleOptions}
+            options={getSingleOptions()}
             selected={searchType}
             onChange={setSearchType}
             leftIcon="🧬"
@@ -144,7 +263,7 @@ export default function ProteinSearch({ onProteinSelect, apiUrl }) {
         </div>
       )}
 
-      {/* Results List (for multiple results) */}
+      {/* Results List */}
       {!selectedProtein && results.length > 1 && (
         <div className="bg-slate-900 border border-slate-600 rounded-lg p-4">
           <h4 className="text-white text-sm font-semibold mb-3">
@@ -222,7 +341,6 @@ export default function ProteinSearch({ onProteinSelect, apiUrl }) {
               {selectedProtein.length} aa · Signal: 1-{selectedProtein.signalPeptideEnd}
             </div>
 
-            {/* Sequence collapsible */}
             <button
               onClick={() => setShowSequence(!showSequence)}
               className="flex items-center gap-2 text-xs text-blue-400 hover:text-blue-300 transition"

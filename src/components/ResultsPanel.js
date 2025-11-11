@@ -2,11 +2,49 @@ import React from 'react';
 import { Download } from 'lucide-react';
 import { useTranslation } from '../i18n/useTranslation';
 
-export default function ResultsPanel({ results, onDownload }) {
+export default function ResultsPanel({ results, onDownload, isBatch = false }) {
   const { t } = useTranslation();
 
   if (!results) return null;
 
+  // Batch mode - Stats globales
+  if (isBatch) {
+    const totalPeptides = results.reduce((sum, r) => sum + r.peptides.length, 0);
+    const avgPeptides = Math.round(totalPeptides / results.length);
+
+    return (
+      <div className="bg-slate-800 rounded-lg p-6 border border-slate-700 sticky top-6 space-y-4">
+        <div className="flex items-center gap-2 mb-2">
+          <h2 className="text-xl font-semibold text-white">{t('batchResultsTitle')}</h2>
+        </div>
+        
+        <div>
+          <p className="text-slate-400 text-sm">{t('totalProteins')}</p>
+          <p className="text-2xl font-bold text-blue-400">{results.length}</p>
+        </div>
+        
+        <div>
+          <p className="text-slate-400 text-sm">{t('totalPeptides')}</p>
+          <p className="text-2xl font-bold text-green-400">{totalPeptides}</p>
+        </div>
+
+        <div>
+          <p className="text-slate-400 text-sm">{t('avgPeptidesPerProtein')}</p>
+          <p className="text-2xl font-bold text-purple-400">{avgPeptides}</p>
+        </div>
+
+        <button
+          onClick={onDownload}
+          className="w-full py-2 bg-green-600 hover:bg-green-700 text-white rounded flex items-center justify-center gap-2 transition text-sm"
+        >
+          <Download size={16} />
+          {t('downloadAllProteins')}
+        </button>
+      </div>
+    );
+  }
+
+  // Single mode - Stats individuelles
   return (
     <div className="bg-slate-800 rounded-lg p-6 border border-slate-700 sticky top-6 space-y-4">
       <div className="flex items-center gap-2 mb-2">
@@ -34,7 +72,7 @@ export default function ResultsPanel({ results, onDownload }) {
         <p className="text-xs text-slate-500 mt-1">{t('optimalRangeNote')}</p>
       </div>
 
-      {Object.keys(results.cleavageMotifCounts).length > 0 && (
+      {results.cleavageMotifCounts && Object.keys(results.cleavageMotifCounts).length > 0 && (
         <div className="bg-slate-900 rounded p-3">
           <p className="text-slate-400 text-xs mb-2">{t('cleavageMotifs')}</p>
           <div className="space-y-1">

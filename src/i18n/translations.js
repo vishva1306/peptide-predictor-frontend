@@ -21,6 +21,25 @@ export const translations = {
     viewSequence: "View Sequence",
     hideSequence: "Hide Sequence",
     
+    // Batch Upload
+    batchUpload: "Batch Upload",
+    uploadFile: "Upload File",
+    uploadTxtFile: "Upload .txt file",
+    dropFileHere: "Drop file here or click to browse",
+    fileFormatHelp: "File format: One UniProt ID per line (max 15)",
+    exampleFormat: "Example format:",
+    exampleIds: "P01189\nP01308\nQ9UBU3",
+    proteinsRecognized: "proteins recognized",
+    viewAllProteins: "View All Proteins",
+    removeProtein: "Remove protein",
+    noProteinsFound: "No valid proteins found in file",
+    
+    // Batch Errors
+    errorFileFormat: "File must be .txt format",
+    errorFileEmpty: "File is empty or contains no valid UniProt IDs",
+    errorTooManyProteins: "Too many proteins (max 15)",
+    errorSomeNotFound: "proteins not found:",
+    
     // Detection modes
     modeTitle: "Peptide Detection Mode",
     modeStrict: "STRICT Mode",
@@ -51,17 +70,34 @@ export const translations = {
     analyzing: "Analysis in progress...",
     uploadButton: "Upload",
     clearButton: "Clear",
+    newAnalysisButton: "New Analysis",
+    newAnalysisConfirmTitle: "Start New Analysis?",
+    newAnalysisConfirmMessage: "All current results will be lost. Are you sure you want to start a new analysis?",
+    cancel: "Cancel",
+    confirm: "Yes, Start New Analysis",
     close: "Close",
+    
+    // Progress
+    analyzingProteins: "Analyzing proteins...",
+    analyzingProtein: "Analyzing",
+    proteinOf: "of",
     
     // Results
     resultsTitle: "Results",
+    batchResultsTitle: "Batch Results",
+    selectProtein: "Select protein:",
+    viewFasta: "View FASTA",
+    totalProteins: "Total proteins",
+    totalPeptides: "Total peptides",
+    avgPeptidesPerProtein: "Avg peptides/protein",
     sequenceLength: "Sequence length",
     cleavageSitesDetected: "Cleavage sites detected",
     peptidesIdentified: "Peptides identified",
     peptidesInRange: "Peptides in optimal range",
     optimalRangeNote: "Optimal range for bioactivity",
     cleavageMotifs: "Cleavage motifs",
-    downloadCSV: "Download CSV",
+    downloadCSV: "Download All CSV",
+    downloadAllProteins: "Download All Proteins",
     
     // Peptides table
     peptidesTableTitle: "Predicted Peptides",
@@ -100,6 +136,8 @@ export const translations = {
     errorSelectProtein: "Please select a protein",
     errorInvalidCharacters: "The sequence contains invalid characters.",
     errorServer: "Error:",
+    clearConfirmTitle: "Clear Analysis?",
+    clearConfirmMessage: "All current data will be lost. Are you sure you want to clear?",
     
     // Footer
     footerDeveloped: "Developed at Svensson Lab, Stanford Medicine",
@@ -128,6 +166,27 @@ export const translations = {
     validateSelection: "Valider la Sélection",
     viewSequence: "Voir la Séquence",
     hideSequence: "Masquer la Séquence",
+    
+    // Batch Upload
+    batchUpload: "Analyse Groupée",
+    uploadFile: "Télécharger Fichier",
+    uploadTxtFile: "Télécharger fichier .txt",
+    dropFileHere: "Déposez le fichier ici ou cliquez pour parcourir",
+    fileFormatHelp: "Format: Un ID UniProt par ligne (max 15)",
+    exampleFormat: "Format exemple:",
+    exampleIds: "P01189\nP01308\nQ9UBU3",
+    proteinsRecognized: "protéines reconnues",
+    viewAllProteins: "Voir Toutes les Protéines",
+    removeProtein: "Retirer la protéine",
+    noProteinsFound: "Aucune protéine valide trouvée dans le fichier",
+    
+    // Erreurs Batch
+    errorFileFormat: "Le fichier doit être au format .txt",
+    errorFileEmpty: "Le fichier est vide ou ne contient aucun ID UniProt valide",
+    errorTooManyProteins: "Trop de protéines (max 15)",
+    errorSomeNotFound: "protéines non trouvées:",
+    clearConfirmTitle: "Effacer l'Analyse?",
+    clearConfirmMessage: "Toutes les données actuelles seront perdues. Êtes-vous sûr de vouloir effacer?",
     
     // Modes de détection
     modeTitle: "Mode de Détection de Peptides",
@@ -159,17 +218,34 @@ export const translations = {
     analyzing: "Analyse en cours...",
     uploadButton: "Télécharger",
     clearButton: "Effacer",
+    newAnalysisButton: "Faire une Nouvelle Analyse",
+    newAnalysisConfirmTitle: "Nouvelle Analyse?",
+    newAnalysisConfirmMessage: "Tous les résultats actuels seront perdus. Êtes-vous sûr de vouloir commencer une nouvelle analyse?",
+    cancel: "Annuler",
+    confirm: "Oui, Nouvelle Analyse",
     close: "Fermer",
+    
+    // Progression
+    analyzingProteins: "Analyse des protéines...",
+    analyzingProtein: "Analyse",
+    proteinOf: "sur",
     
     // Résultats
     resultsTitle: "Résultats",
+    batchResultsTitle: "Résultats Groupés",
+    selectProtein: "Sélectionner protéine:",
+    viewFasta: "Voir FASTA",
+    totalProteins: "Total protéines",
+    totalPeptides: "Total peptides",
+    avgPeptidesPerProtein: "Moy. peptides/protéine",
     sequenceLength: "Longueur de séquence",
     cleavageSitesDetected: "Sites de clivage détectés",
     peptidesIdentified: "Peptides identifiés",
     peptidesInRange: "Peptides dans la gamme optimale",
     optimalRangeNote: "Gamme optimale pour bioactivité",
     cleavageMotifs: "Motifs de clivage",
-    downloadCSV: "Télécharger CSV",
+    downloadCSV: "Télécharger Tout CSV",
+    downloadAllProteins: "Télécharger Toutes les Protéines",
     
     // Tableau peptides
     peptidesTableTitle: "Peptides Prédits",
