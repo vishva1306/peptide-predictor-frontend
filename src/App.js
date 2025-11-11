@@ -78,7 +78,7 @@ function PeptidePredictor() {
   const [showConfirmModal, setShowConfirmModal] = useState(false);
   const [showClearConfirmModal, setShowClearConfirmModal] = useState(false);
 
-  const API_URL =  'http://localhost:8000';
+  const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:8000';
 
   console.log('🔗 API_URL:', API_URL);
 
