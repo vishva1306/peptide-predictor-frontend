@@ -11,57 +11,21 @@ export default function PeptidesTable({ results }) {
   if (!results || !results.peptides) return null;
 
   const getSizeCategory = (length) => {
-    if (length < 3) {
-      return {
-        label: t('sizeTiny'),
-        range: '<3 aa',
-        color: 'bg-slate-700/30 text-slate-400',
-      };
-    } else if (length >= 3 && length <= 20) {
-      return {
-        label: t('sizeSmall'),
-        range: '3-20 aa',
-        color: 'bg-green-900/30 text-green-400',
-      };
-    } else if (length >= 21 && length <= 50) {
-      return {
-        label: t('sizeMedium'),
-        range: '21-50 aa',
-        color: 'bg-blue-900/30 text-blue-400',
-      };
-    } else if (length >= 51 && length <= 100) {
-      return {
-        label: t('sizeLarge'),
-        range: '51-100 aa',
-        color: 'bg-purple-900/30 text-purple-400',
-      };
-    } else {
-      return {
-        label: t('sizeXLarge'),
-        range: '>100 aa',
-        color: 'bg-orange-900/30 text-orange-400',
-      };
-    }
+    if (length < 3) return { label: t('sizeTiny'), range: '<3 aa', color: 'bg-slate-700/30 text-slate-400' };
+    if (length <= 20) return { label: t('sizeSmall'), range: '3-20 aa', color: 'bg-green-900/30 text-green-400' };
+    if (length <= 50) return { label: t('sizeMedium'), range: '21-50 aa', color: 'bg-blue-900/30 text-blue-400' };
+    if (length <= 100) return { label: t('sizeLarge'), range: '51-100 aa', color: 'bg-purple-900/30 text-purple-400' };
+    return { label: t('sizeXLarge'), range: '>100 aa', color: 'bg-orange-900/30 text-orange-400' };
   };
 
-  // ⭐ Extraire ID - Gene Name du proteinId
   const getIdGeneName = () => {
-    if (!results.proteinId || results.proteinId === 'N/A') {
-      return 'N/A';
-    }
-
-    // Format attendu : SP|P01189|POMC_HUMAN PRO-OPIOMELANOCORTIN
-    // On veut : P01189|POMC_HUMAN
+    if (!results.proteinId || results.proteinId === 'N/A') return 'N/A';
     const match = results.proteinId.match(/[a-z]{2}\|([A-Z0-9]+)\|([A-Z0-9_]+)/i);
-
-    if (match) {
-      return `${match[1]}|${match[2]}`; // P01189|POMC_HUMAN
-    }
-
-    return results.proteinId; // Fallback si format différent
+    return match ? `${match[1]}|${match[2]}` : results.proteinId;
   };
 
   const idGeneName = getIdGeneName();
+  const showUniProtColumn = !results.isFasta;
 
   return (
     <>
@@ -98,14 +62,16 @@ export default function PeptidesTable({ results }) {
                   </div>
                 </th>
                 <th className="px-4 py-3 text-left text-slate-300 font-semibold">{t('tableHeaderSize')}</th>
-                <th className="px-4 py-3 text-left text-slate-300 font-semibold">
-                  <div>
-                    <div>{t('tableHeaderUniProt')}</div>
-                    <div className="text-xs font-normal text-slate-500 mt-0.5">
-                      {t('tableHeaderUniProtSubtitle')}
+                {showUniProtColumn && (
+                  <th className="px-4 py-3 text-left text-slate-300 font-semibold">
+                    <div>
+                      <div>{t('tableHeaderUniProt')}</div>
+                      <div className="text-xs font-normal text-slate-500 mt-0.5">
+                        {t('tableHeaderUniProtSubtitle')}
+                      </div>
                     </div>
-                  </div>
-                </th>
+                  </th>
+                )}
                 <th className="px-4 py-3 text-left text-slate-300 font-semibold">{t('tableHeaderPTMs')}</th>
                 <th className="px-4 py-3 text-left text-slate-300 font-semibold">{t('tableHeaderMotif')}</th>
               </tr>
@@ -125,29 +91,16 @@ export default function PeptidesTable({ results }) {
                       }`}
                     >
                       <td className="px-4 py-3 text-slate-400">{idx + 1}</td>
-
                       <td className="px-4 py-3 font-mono text-blue-300 text-xs">{idGeneName}</td>
+                      <td className="px-4 py-3 font-mono text-blue-300 text-xs break-all">{peptide.sequence}</td>
+                      <td className="px-4 py-3 text-slate-400 text-xs">{peptide.start}-{peptide.end}</td>
+                      <td className="px-4 py-3 text-slate-400 text-xs font-semibold">{peptide.length}</td>
 
-                      <td className="px-4 py-3 font-mono text-blue-300 text-xs break-all">
-                        {peptide.sequence}
-                      </td>
-
-                      <td className="px-4 py-3 text-slate-400 text-xs">
-                        {peptide.start}-{peptide.end}
-                      </td>
-
-                      <td className="px-4 py-3 text-slate-400 text-xs font-semibold">
-                        {peptide.length}
-                      </td>
-
+                      {/* Bioactivity */}
                       <td className="px-4 py-3">
                         <div className="flex items-center gap-2">
-                          <span className="text-sm">
-                            {peptide.bioactivitySource === 'api' ? '🤖' : '📊'}
-                          </span>
-                          <span className="text-xs font-semibold text-white">
-                            {bioScore.toFixed(1)}/100
-                          </span>
+                          <span className="text-sm">{peptide.bioactivitySource === 'api' ? '🤖' : '📊'}</span>
+                          <span className="text-xs font-semibold text-white">{bioScore.toFixed(1)}/100</span>
                           <div className="w-16 bg-slate-700 rounded-full h-2">
                             <div
                               className={`h-2 rounded-full transition-all ${
@@ -163,6 +116,7 @@ export default function PeptidesTable({ results }) {
                         </div>
                       </td>
 
+                      {/* Size */}
                       <td className="px-4 py-3">
                         <span className={`text-xs px-2 py-1 rounded ${sizeCategory.color}`}>
                           {sizeCategory.label}
@@ -170,56 +124,55 @@ export default function PeptidesTable({ results }) {
                         </span>
                       </td>
 
-                      <td className="px-4 py-3">
-                        {peptide.uniprotStatus === 'exact' ? (
-                          <div className="space-y-1">
-                            <div className="flex items-center gap-1">
-                              <span className="text-green-400 text-xs font-semibold">✅ Exact match</span>
+                      {/* UniProt column */}
+                      {showUniProtColumn && (
+                        <td className="px-4 py-3">
+                          {peptide.uniprotStatus === 'exact' ? (
+                            <div className="space-y-1">
+                              <div className="flex items-center gap-1">
+                                <span className="text-green-400 text-xs font-semibold">✅ Exact match</span>
+                              </div>
+                              <div className="text-xs text-slate-300 font-semibold">{peptide.uniprotName}</div>
+                              {peptide.uniprotAccession && (
+                                <a
+                                  href={`https://www.uniprot.org/uniprotkb/${peptide.uniprotAccession}`}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  className="text-xs text-blue-400 hover:text-blue-300 transition inline-flex items-center gap-1"
+                                >
+                                  {peptide.uniprotAccession}
+                                  <ExternalLink size={12} />
+                                </a>
+                              )}
                             </div>
-                            <div className="text-xs text-slate-300 font-semibold">
-                              {peptide.uniprotName}
+                          ) : peptide.uniprotStatus === 'partial' ? (
+                            <div className="space-y-1">
+                              <div className="flex items-center gap-1">
+                                <span className="text-yellow-400 text-xs font-semibold">⚠️ Partial match</span>
+                              </div>
+                              {peptide.uniprotNote && (
+                                <div className="text-xs text-slate-400 italic">{peptide.uniprotNote}</div>
+                              )}
+                              <div className="text-xs text-slate-300 font-semibold">{peptide.uniprotName}</div>
+                              {peptide.uniprotAccession && (
+                                <a
+                                  href={`https://www.uniprot.org/uniprotkb/${peptide.uniprotAccession}`}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  className="text-xs text-blue-400 hover:text-blue-300 transition inline-flex items-center gap-1"
+                                >
+                                  {peptide.uniprotAccession}
+                                  <ExternalLink size={12} />
+                                </a>
+                              )}
                             </div>
-                            {peptide.uniprotAccession && (
-                              <a
-                                href={`https://www.uniprot.org/uniprotkb/${peptide.uniprotAccession}`}
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                className="text-xs text-blue-400 hover:text-blue-300 transition inline-flex items-center gap-1"
-                              >
-                                {peptide.uniprotAccession}
-                                <ExternalLink size={12} />
-                              </a>
-                            )}
-                          </div>
-                        ) : peptide.uniprotStatus === 'partial' ? (
-                          <div className="space-y-1">
-                            <div className="flex items-center gap-1">
-                              <span className="text-yellow-400 text-xs font-semibold">⚠️ Partial match</span>
-                            </div>
-                            {peptide.uniprotNote && (
-                              <div className="text-xs text-slate-400 italic">{peptide.uniprotNote}</div>
-                            )}
-                            <div className="text-xs text-slate-300 font-semibold">
-                              {peptide.uniprotName}
-                            </div>
-                            {peptide.uniprotAccession && (
-                              <a
-                                href={`https://www.uniprot.org/uniprotkb/${peptide.uniprotAccession}`}
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                className="text-xs text-blue-400 hover:text-blue-300 transition inline-flex items-center gap-1"
-                              >
-                                {peptide.uniprotAccession}
-                                <ExternalLink size={12} />
-                              </a>
-                            )}
-                          </div>
-                        ) : (
-                          <span className="text-xs text-slate-500">❌ Unknown</span>
-                        )}
-                      </td>
+                          ) : (
+                            <span className="text-xs text-slate-500">❌ Unknown</span>
+                          )}
+                        </td>
+                      )}
 
-                      {/* ⭐ NOUVELLE COLONNE PTMs */}
+                      {/* PTMs */}
                       <td className="px-4 py-3">
                         {peptide.ptms && peptide.ptms.length > 0 ? (
                           <div className="space-y-1">
@@ -238,15 +191,14 @@ export default function PeptidesTable({ results }) {
                         )}
                       </td>
 
-                      <td className="px-4 py-3 text-slate-400 font-mono text-xs">
-                        {peptide.cleavageMotif}
-                      </td>
+                      {/* Motif */}
+                      <td className="px-4 py-3 text-slate-400 font-mono text-xs">{peptide.cleavageMotif}</td>
                     </tr>
                   );
                 })
               ) : (
                 <tr>
-                  <td colSpan={10} className="px-4 py-4 text-center text-slate-500">
+                  <td colSpan={showUniProtColumn ? 10 : 9} className="px-4 py-4 text-center text-slate-500">
                     No peptides found with these parameters
                   </td>
                 </tr>
@@ -256,12 +208,8 @@ export default function PeptidesTable({ results }) {
         </div>
       </div>
 
-      {/* PTM Modal */}
       {selectedPeptide && (
-        <PTMModal
-          peptide={selectedPeptide}
-          onClose={() => setSelectedPeptide(null)}
-        />
+        <PTMModal peptide={selectedPeptide} onClose={() => setSelectedPeptide(null)} />
       )}
     </>
   );

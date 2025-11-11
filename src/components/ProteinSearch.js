@@ -1,12 +1,14 @@
 import React, { useState } from 'react';
 import { Search, Loader, CheckCircle, ChevronDown, ChevronUp } from 'lucide-react';
 import { useTranslation } from '../i18n/useTranslation';
-import ToggleSwitch from './ToggleSwitch';
 import BatchUpload from './BatchUpload';
+import FASTAInput from './FASTAInput';
 
 export default function ProteinSearch({ 
   onProteinSelect, 
   onBatchUpload, 
+  onFASTAValidated,
+  onSearchTypeChange,
   apiUrl, 
   mode,
   uploadedProteins,
@@ -26,6 +28,14 @@ export default function ProteinSearch({
   const [showSequence, setShowSequence] = useState(false);
   const [hasSearched, setHasSearched] = useState(false);
   const [batchError, setBatchError] = useState('');
+
+  // Notifier App.js du changement de searchType
+  const handleSearchTypeChange = (newType) => {
+    setSearchType(newType);
+    if (onSearchTypeChange) {
+      onSearchTypeChange(newType);
+    }
+  };
 
   // Handler : Search
   const handleSearch = async () => {
@@ -193,12 +203,6 @@ export default function ProteinSearch({
     }
   };
 
-  // Options pour le toggle
-  const getSingleOptions = () => [
-    { value: 'gene_name', label: t('searchByGeneName') },
-    { value: 'accession', label: t('searchByAccession') }
-  ];
-
   // Si mode batch, afficher BatchUpload
   if (mode === 'batch') {
     return (
@@ -213,19 +217,93 @@ export default function ProteinSearch({
     );
   }
 
-  // Mode single
+  // Si mode FASTA
+  if (searchType === 'fasta') {
+    return (
+      <div className="space-y-4">
+        {/* Toggle 3 boutons - MÊME LARGEUR */}
+        <div className="flex justify-start">
+          <div className="inline-flex bg-slate-900 rounded-lg p-1 border border-slate-700">
+            <button
+              onClick={() => handleSearchTypeChange('gene_name')}
+              className={`w-40 py-2 rounded-lg transition text-sm ${
+                searchType === 'gene_name'
+                  ? 'bg-blue-600 text-white'
+                  : 'text-slate-400 hover:text-white'
+              }`}
+            >
+              🧬 Gene Name
+            </button>
+            <button
+              onClick={() => handleSearchTypeChange('accession')}
+              className={`w-40 py-2 rounded-lg transition text-sm ${
+                searchType === 'accession'
+                  ? 'bg-blue-600 text-white'
+                  : 'text-slate-400 hover:text-white'
+              }`}
+            >
+              🔑 UniProt ID
+            </button>
+            <button
+              onClick={() => handleSearchTypeChange('fasta')}
+              className={`w-40 py-2 rounded-lg transition text-sm ${
+                searchType === 'fasta'
+                  ? 'bg-blue-600 text-white'
+                  : 'text-slate-400 hover:text-white'
+              }`}
+            >
+              🧬 FASTA Sequence
+            </button>
+          </div>
+        </div>
+
+        {/* FASTA Input */}
+        <FASTAInput
+          onSequenceValidated={onFASTAValidated}
+          onClear={() => onFASTAValidated(null)}
+        />
+      </div>
+    );
+  }
+
+  // Mode single (Gene Name / UniProt ID)
   return (
     <div className="space-y-4">
-      {/* Toggle Single options */}
+      {/* Toggle 3 boutons - MÊME LARGEUR */}
       {!selectedProtein && (
         <div className="flex justify-start">
-          <ToggleSwitch
-            options={getSingleOptions()}
-            selected={searchType}
-            onChange={setSearchType}
-            leftIcon="🧬"
-            rightIcon="🔑"
-          />
+          <div className="inline-flex bg-slate-900 rounded-lg p-1 border border-slate-700">
+            <button
+              onClick={() => handleSearchTypeChange('gene_name')}
+              className={`w-40 py-2 rounded-lg transition text-sm ${
+                searchType === 'gene_name'
+                  ? 'bg-blue-600 text-white'
+                  : 'text-slate-400 hover:text-white'
+              }`}
+            >
+              🧬 Gene Name
+            </button>
+            <button
+              onClick={() => handleSearchTypeChange('accession')}
+              className={`w-40 py-2 rounded-lg transition text-sm ${
+                searchType === 'accession'
+                  ? 'bg-blue-600 text-white'
+                  : 'text-slate-400 hover:text-white'
+              }`}
+            >
+              🔑 UniProt ID
+            </button>
+            <button
+              onClick={() => handleSearchTypeChange('fasta')}
+              className={`w-40 py-2 rounded-lg transition text-sm ${
+                searchType === 'fasta'
+                  ? 'bg-blue-600 text-white'
+                  : 'text-slate-400 hover:text-white'
+              }`}
+            >
+              🧬 FASTA Sequence
+            </button>
+          </div>
         </div>
       )}
 

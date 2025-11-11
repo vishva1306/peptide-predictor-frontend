@@ -8,7 +8,8 @@ export default function ParametersPanel({
   params, 
   setParams,
   recommendedParams = null,
-  readonly = false
+  readonly = false,
+  isFasta = false
 }) {
   const { t } = useTranslation();
 
@@ -29,7 +30,8 @@ export default function ParametersPanel({
     <div className="bg-slate-800 rounded-lg p-6 border border-slate-700">
       <h3 className="text-white font-semibold mb-4">{t('parametersTitle')}</h3>
 
-      {recommendedParams && (
+      {/* Recommended Parameters Box (seulement si UniProt) */}
+      {!isFasta && recommendedParams && (
         <div className="mb-6 p-4 bg-gradient-to-br from-blue-900/30 to-blue-800/20 border-2 border-blue-600/50 rounded-lg">
           <div className="flex items-center gap-2 mb-4">
             <Sparkles className="text-blue-400" size={18} />
@@ -137,7 +139,8 @@ export default function ParametersPanel({
         </div>
       )}
 
-      {!recommendedParams && (
+      {/* Parameters sans Recommended Box (FASTA ou pas de recommandations) */}
+      {(isFasta || !recommendedParams) && (
         <div className="space-y-4 mb-6">
           <div>
             <label className="block text-sm text-slate-300 mb-2">
@@ -221,6 +224,7 @@ export default function ParametersPanel({
         </div>
       )}
 
+      {/* Detection Mode */}
       <div className="pt-6 border-t border-slate-700">
         <label className="block text-sm text-slate-300 mb-3">
           <span className="flex items-center gap-2">

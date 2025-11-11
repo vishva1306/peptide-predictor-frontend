@@ -52,6 +52,10 @@ function PeptidePredictor() {
   const [selectedProtein, setSelectedProtein] = useState(null);
   const [results, setResults] = useState(null);
   
+  // FASTA mode states
+  const [fastaData, setFastaData] = useState(null);
+  const [searchType, setSearchType] = useState('gene_name');
+  
   // Batch mode states
   const [batchProteins, setBatchProteins] = useState([]);
   const [batchResults, setBatchResults] = useState(null);
@@ -64,9 +68,9 @@ function PeptidePredictor() {
   const [mode, setMode] = useState('permissive');
   const [params, setParams] = useState({
     signalPeptideLength: 20,
-    minCleavageSites: 4,
-    minCleavageSpacing: 5,
-    maxPeptideLength: 100
+    minCleavageSites: 1,
+    minCleavageSpacing: 2,
+    maxPeptideLength: 300
   });
   
   // UI states
@@ -74,11 +78,11 @@ function PeptidePredictor() {
   const [showConfirmModal, setShowConfirmModal] = useState(false);
   const [showClearConfirmModal, setShowClearConfirmModal] = useState(false);
 
-  const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:8000';
+  const API_URL =  'http://localhost:8000';
 
   console.log('🔗 API_URL:', API_URL);
 
-  // ==================== SINGLE MODE HANDLERS ====================
+  // ==================== SINGLE MODE HANDLERS (UniProt) ====================
 
   const handleProteinSelect = (protein) => {
     setSelectedProtein(protein);
@@ -88,6 +92,96 @@ function PeptidePredictor() {
     if (protein && protein.recommendedParams) {
       setParams(protein.recommendedParams);
       console.log('📊 Auto-populated parameters:', protein.recommendedParams);
+    }
+  };
+
+  // ==================== FASTA MODE HANDLERS ====================
+
+  const handleFASTAValidated = (validated) => {
+    setFastaData(validated);
+    setResults(null);
+    setError('');
+    
+    // Paramètres par défaut FASTA
+    setParams({
+      signalPeptideLength: 20,
+      minCleavageSites: 1,
+      minCleavageSpacing: 2,
+      maxPeptideLength: 300
+    });
+  };
+
+  const handleAnalyzeFASTA = async () => {
+    setError('');
+    setResults(null);
+
+    if (!fastaData) {
+      setError('Please enter a valid FASTA sequence');
+      return;
+    }
+
+    setLoading(true);
+
+    try {
+      const requestBody = {
+        fastaSequence: fastaData.sequence,
+        fastaHeader: fastaData.header,
+        mode: mode,
+        signalPeptideLength: params.signalPeptideLength,
+        minCleavageSites: params.minCleavageSites,
+        minCleavageSpacing: params.minCleavageSpacing,
+        maxPeptideLength: params.maxPeptideLength
+      };
+      
+      console.log('🚀 FASTA REQUEST:', requestBody);
+
+      const response = await fetch(`${API_URL}/analyze`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(requestBody)
+      });
+
+      if (!response.ok) {
+        let errorMessage = `HTTP ${response.status}`;
+        try {
+          const errorData = await response.json();
+          errorMessage = errorData.detail || errorMessage;
+        } catch (e) {
+          errorMessage = response.statusText || errorMessage;
+        }
+        throw new Error(errorMessage);
+      }
+
+      const data = await response.json();
+      
+      console.log('🔍 FASTA API Response:', data);
+      
+      setResults({
+        sequenceLength: data.sequenceLength,
+        cleavageSitesCount: data.cleavageSitesCount,
+        peptides: data.peptides,
+        peptidesInRange: data.peptidesInRange,
+        proteinId: data.proteinId,
+        geneName: data.geneName,
+        proteinName: data.proteinName,
+        isFasta: true,
+        fastaHeader: data.fastaHeader,
+        mode: data.mode,
+        cleavageMotifCounts: data.peptides.reduce((acc, p) => {
+          acc[p.cleavageMotif] = (acc[p.cleavageMotif] || 0) + 1;
+          return acc;
+        }, {})
+      });
+    } catch (err) {
+      console.error('FASTA analysis error:', err);
+      
+      if (err.message.includes('Failed to fetch')) {
+        setError(`${t('errorServer')} Cannot reach API server. Check your connection.`);
+      } else {
+        setError(`${t('errorServer')} ${err.message}`);
+      }
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -143,6 +237,8 @@ function PeptidePredictor() {
         proteinId: `${data.proteinId}|${data.geneName}_HUMAN`,
         geneName: data.geneName,
         proteinName: data.proteinName,
+        isFasta: false,
+        mode: data.mode,
         cleavageMotifCounts: data.peptides.reduce((acc, p) => {
           acc[p.cleavageMotif] = (acc[p.cleavageMotif] || 0) + 1;
           return acc;
@@ -286,28 +382,54 @@ function PeptidePredictor() {
     };
 
     const idGeneName = results.proteinId || "N/A";
-    const cleanFileName = idGeneName.replace(/\|/g, '_');
+    const cleanFileName = idGeneName.replace(/\|/g, '_').replace(/[^a-zA-Z0-9_-]/g, '_');
     const fileName = `${cleanFileName}_peptides.csv`;
 
-    const csv = [
-      ['#', 'ID - Gene Name', 'Sequence', 'Position', 'Length (aa)', 'Bioactivity Score', 'Bioactivity Source', 'Size', 'UniProt Status', 'UniProt Name', 'PTMs Detected', 'Modified Sequence', 'Cleavage Motif', 'Detection Mode'],
-      ...results.peptides.map((p, idx) => [
-        idx + 1,
-        idGeneName,
-        p.sequence,
-        `${p.start}-${p.end}`,
-        p.length,
-        p.bioactivityScore.toFixed(1),
-        p.bioactivitySource === 'api' ? 'PeptideRanker API' : 'Lab ML Bioactivity Model',
-        getSizeCategory(p.length),
-        p.uniprotStatus === 'exact' ? 'Exact' : p.uniprotStatus === 'partial' ? 'Partial' : 'Unknown',
-        p.uniprotName || 'N/A',
-        formatPTMs(p.ptms),
-        p.modifiedSequence || p.sequence,
-        p.cleavageMotif,
-        mode === 'strict' ? 'STRICT' : 'PERMISSIVE'
-      ]),
-    ]
+    // Headers adaptés selon FASTA ou UniProt
+    const headers = results.isFasta
+      ? ['#', 'Sequence', 'Position', 'Length (aa)', 'Bioactivity Score', 'Bioactivity Source', 'Size', 'PTMs Detected', 'Modified Sequence', 'Cleavage Motif', 'Detection Mode']
+      : ['#', 'ID - Gene Name', 'Sequence', 'Position', 'Length (aa)', 'Bioactivity Score', 'Bioactivity Source', 'Size', 'UniProt Status', 'UniProt Name', 'PTMs Detected', 'Modified Sequence', 'Cleavage Motif', 'Detection Mode'];
+
+    const rows = [
+      headers,
+      ...results.peptides.map((p, idx) => {
+        const baseRow = [
+          idx + 1,
+          p.sequence,
+          `${p.start}-${p.end}`,
+          p.length,
+          p.bioactivityScore.toFixed(1),
+          p.bioactivitySource === 'api' ? 'PeptideRanker API' : 'Lab ML Bioactivity Model',
+          getSizeCategory(p.length),
+        ];
+
+        if (!results.isFasta) {
+          // UniProt: ajouter ID et UniProt info
+          return [
+            idx + 1,
+            idGeneName,
+            ...baseRow.slice(1, 7),
+            p.uniprotStatus === 'exact' ? 'Exact' : p.uniprotStatus === 'partial' ? 'Partial' : 'Unknown',
+            p.uniprotName || 'N/A',
+            formatPTMs(p.ptms),
+            p.modifiedSequence || p.sequence,
+            p.cleavageMotif,
+            mode === 'strict' ? 'STRICT' : 'PERMISSIVE'
+          ];
+        } else {
+          // FASTA: pas de colonne UniProt
+          return [
+            ...baseRow,
+            formatPTMs(p.ptms),
+            p.modifiedSequence || p.sequence,
+            p.cleavageMotif,
+            mode === 'strict' ? 'STRICT' : 'PERMISSIVE'
+          ];
+        }
+      }),
+    ];
+
+    const csv = rows
       .map(row => row.map(cell => `"${cell}"`).join(','))
       .join('\n');
 
@@ -346,7 +468,6 @@ function PeptidePredictor() {
       fileName = `batch_analysis_${randomNum}.csv`;
     }
 
-    // ⭐ OPTION 1 : Format simple - un seul header, toutes les données à la suite
     const allRows = [];
     let peptideCounter = 1;
 
@@ -392,7 +513,7 @@ function PeptidePredictor() {
       });
     });
 
-    // Convertir en CSV (identique au single mode)
+    // Convertir en CSV
     const csv = allRows
       .map(row => row.map(cell => `"${cell}"`).join(','))
       .join('\n');
@@ -416,6 +537,8 @@ function PeptidePredictor() {
     // Reset tout et retourner au mode single
     setAnalysisMode('single');
     setSelectedProtein(null);
+    setFastaData(null);
+    setSearchType('gene_name');
     setResults(null);
     setBatchProteins([]);
     setBatchResults(null);
@@ -425,9 +548,9 @@ function PeptidePredictor() {
     setMode('permissive');
     setParams({
       signalPeptideLength: 20,
-      minCleavageSites: 4,
-      minCleavageSpacing: 5,
-      maxPeptideLength: 100
+      minCleavageSites: 1,
+      minCleavageSpacing: 2,
+      maxPeptideLength: 300
     });
     setShowConfirmModal(false);
     
@@ -444,6 +567,7 @@ function PeptidePredictor() {
   const confirmClear = () => {
     if (analysisMode === 'single') {
       setSelectedProtein(null);
+      setFastaData(null);
       setResults(null);
       setError('');
     } else {
@@ -464,6 +588,8 @@ function PeptidePredictor() {
     // Reset states
     setAnalysisMode(newMode);
     setSelectedProtein(null);
+    setFastaData(null);
+    setSearchType('gene_name');
     setResults(null);
     setBatchProteins([]);
     setBatchResults(null);
@@ -476,7 +602,7 @@ function PeptidePredictor() {
 
   const hasResults = analysisMode === 'single' ? results : batchResults;
   const canAnalyze = analysisMode === 'single' 
-    ? selectedProtein 
+    ? (selectedProtein || fastaData)
     : batchProteins.length > 0;
 
   return (
@@ -513,7 +639,7 @@ function PeptidePredictor() {
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           <div className="lg:col-span-2 space-y-6">
             
-            {/* Protein Search / Batch Upload */}
+            {/* Protein Search / Batch Upload / FASTA */}
             <div className="bg-slate-800 rounded-lg p-6 border border-slate-700">
               <h3 className="text-white font-semibold mb-3">
                 {analysisMode === 'single' 
@@ -525,6 +651,8 @@ function PeptidePredictor() {
               <ProteinSearch 
                 onProteinSelect={handleProteinSelect}
                 onBatchUpload={handleBatchUpload}
+                onFASTAValidated={handleFASTAValidated}
+                onSearchTypeChange={(type) => setSearchType(type)}
                 apiUrl={API_URL}
                 mode={analysisMode}
                 uploadedProteins={batchProteins}
@@ -547,14 +675,15 @@ function PeptidePredictor() {
               </div>
             )}
 
-            {/* Parameters Panel (Single mode only) */}
-            {analysisMode === 'single' && selectedProtein && !results && (
+            {/* Parameters Panel (Single mode - visible immédiatement pour FASTA) */}
+            {analysisMode === 'single' && (selectedProtein || searchType === 'fasta') && !results && (
               <ParametersPanel 
                 mode={mode}
                 setMode={setMode}
                 params={params}
                 setParams={setParams}
-                recommendedParams={selectedProtein.recommendedParams}
+                recommendedParams={selectedProtein ? selectedProtein.recommendedParams : null}
+                isFasta={searchType === 'fasta'}
               />
             )}
 
@@ -600,7 +729,11 @@ function PeptidePredictor() {
             {/* Analyze Button */}
             {canAnalyze && !loading && !hasResults && (
               <button
-                onClick={analysisMode === 'single' ? handleAnalyzeSingle : handleAnalyzeBatch}
+                onClick={
+                  analysisMode === 'single' 
+                    ? (fastaData ? handleAnalyzeFASTA : handleAnalyzeSingle)
+                    : handleAnalyzeBatch
+                }
                 className="w-full py-3 bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white font-semibold rounded-lg transition flex items-center justify-center gap-2"
               >
                 {t('analyzeButton')}

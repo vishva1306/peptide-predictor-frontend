@@ -5,6 +5,18 @@ export const translations = {
     subtitle: "Analyze protein sequences with PCSK1/3 cleavage detection",
     labWebsite: "Svensson Lab Website",
     
+    // ⭐ FASTA - Nouveaux
+    fastaSequence: 'FASTA Sequence',
+    pasteFastaHere: 'Paste FASTA sequence here...',
+    fastaPlaceholder: 'Paste FASTA sequence here...\n\nExample with header:\n>sp|P01308|INS_HUMAN Insulin\nMALWMRLLPLLALLALWGPDPAAAFVNQHLCGSHLVEALYLVCGERGFFYTPKT...\n\nOr just the sequence (no header):\nMALWMRLLPLLALLALWGPDPAAAFVNQHLCGSHLVEALYLVCGERGFFYTPKT...',
+    validSequence: 'Valid sequence',
+    aminoAcids: 'amino acids',
+    headerDetected: 'Header detected',
+    invalidCharacters: 'Invalid characters found',
+    sequenceTooShort: 'Sequence too short',
+    minimumRequired: 'Minimum 30 amino acids required',
+    onlyAminoAcids: 'Only amino acids (A-Z) are allowed',
+
     // Protein Search
     proteinSearchTitle: "Add Human Secreted Protein",
     proteinSearchPlaceholderGeneName: "Example: POMC, INS, GCG",
@@ -151,6 +163,19 @@ export const translations = {
     subtitle: "Analysez les séquences protéiques avec détection PCSK1/3",
     labWebsite: "Site du Svensson Lab",
     
+    // ⭐ FASTA - Nouveaux
+    fastaSequence: 'Séquence FASTA',
+    pasteFastaHere: 'Collez la séquence FASTA ici...',
+    fastaPlaceholder: 'Collez la séquence FASTA ici...\n\nExemple avec en-tête:\n>sp|P01308|INS_HUMAN Insulin\nMALWMRLLPLLALLALWGPDPAAAFVNQHLCGSHLVEALYLVCGERGFFYTPKT...\n\nOu juste la séquence (sans en-tête):\nMALWMRLLPLLALLALWGPDPAAAFVNQHLCGSHLVEALYLVCGERGFFYTPKT...',
+    validSequence: 'Séquence valide',
+    aminoAcids: 'acides aminés',
+    headerDetected: 'En-tête détecté',
+    invalidCharacters: 'Caractères invalides trouvés',
+    sequenceTooShort: 'Séquence trop courte',
+    minimumRequired: 'Minimum 30 acides aminés requis',
+    onlyAminoAcids: 'Seuls les acides aminés (A-Z) sont autorisés',
+
+
     // Recherche Protéine
     proteinSearchTitle: "Ajouter Protéine Sécrétée Humaine",
     proteinSearchPlaceholderGeneName: "Exemple: POMC, INS, GCG",
