@@ -5,6 +5,7 @@ import Header from './components/Header';
 import Footer from './components/Footer';
 import ProteinSearch from './components/ProteinSearch';
 import ParametersPanel from './components/ParametersPanel';
+import BatchParameters from './components/BatchParameters';
 import ResultsPanel from './components/ResultsPanel';
 import PeptidesTable from './components/PeptidesTable';
 import ProteinsModal from './components/ProteinsModal';
@@ -89,9 +90,15 @@ function PeptidePredictor() {
     setResults(null);
     setError('');
     
+    // ⭐ NOUVEAU : Garder seulement signalPeptideLength, écraser le reste avec defaults
     if (protein && protein.recommendedParams) {
-      setParams(protein.recommendedParams);
-      console.log('📊 Auto-populated parameters:', protein.recommendedParams);
+      setParams({
+        signalPeptideLength: protein.recommendedParams.signalPeptideLength,
+        minCleavageSites: 1,
+        minCleavageSpacing: 2,
+        maxPeptideLength: 300
+      });
+      console.log('📊 Signal peptide from UniProt:', protein.recommendedParams.signalPeptideLength);
     }
   };
 
@@ -266,6 +273,14 @@ function PeptidePredictor() {
     setUploadedFileName(fileName);
     setBatchResults(null);
     setError('');
+    
+    // ⭐ NOUVEAU : Initialiser les params batch avec defaults
+    setParams({
+      signalPeptideLength: 20, // Non utilisé en batch (calculé par backend)
+      minCleavageSites: 1,
+      minCleavageSpacing: 2,
+      maxPeptideLength: 300
+    });
   };
 
   const handleChangeFile = () => {
@@ -298,9 +313,13 @@ function PeptidePredictor() {
     try {
       const proteinIds = batchProteins.map(p => p.accession);
       
+      // ⭐ MODIFIÉ : Envoyer les 3 paramètres (signal peptide ignoré en batch par backend)
       const requestBody = {
         proteinId: proteinIds,
-        mode: mode
+        mode: mode,
+        minCleavageSites: params.minCleavageSites,
+        minCleavageSpacing: params.minCleavageSpacing,
+        maxPeptideLength: params.maxPeptideLength
       };
       
       console.log('🚀 BATCH REQUEST:', requestBody);
@@ -610,31 +629,33 @@ function PeptidePredictor() {
       <div className="max-w-6xl mx-auto">
         <Header />
 
-        {/* Mode Toggle - EN DEHORS du rectangle */}
-        <div className="mb-6">
-          <div className="inline-flex bg-slate-800 rounded-lg p-1 border border-slate-700">
-            <button
-              onClick={() => toggleMode('single')}
-              className={`px-6 py-2 rounded-lg transition ${
-                analysisMode === 'single'
-                  ? 'bg-blue-600 text-white'
-                  : 'text-slate-400 hover:text-white'
-              }`}
-            >
-              🔬 Single Protein
-            </button>
-            <button
-              onClick={() => toggleMode('batch')}
-              className={`px-6 py-2 rounded-lg transition ${
-                analysisMode === 'batch'
-                  ? 'bg-blue-600 text-white'
-                  : 'text-slate-400 hover:text-white'
-              }`}
-            >
-              📦 {t('batchUpload')}
-            </button>
+        {/* Mode Toggle - CACHER SI RESULTS */}
+        {!hasResults && (
+          <div className="mb-6">
+            <div className="inline-flex bg-slate-800 rounded-lg p-1 border border-slate-700">
+              <button
+                onClick={() => toggleMode('single')}
+                className={`px-6 py-2 rounded-lg transition ${
+                  analysisMode === 'single'
+                    ? 'bg-blue-600 text-white'
+                    : 'text-slate-400 hover:text-white'
+                }`}
+              >
+                🔬 Single Protein
+              </button>
+              <button
+                onClick={() => toggleMode('batch')}
+                className={`px-6 py-2 rounded-lg transition ${
+                  analysisMode === 'batch'
+                    ? 'bg-blue-600 text-white'
+                    : 'text-slate-400 hover:text-white'
+                }`}
+              >
+                📦 {t('batchUpload')}
+              </button>
+            </div>
           </div>
-        </div>
+        )}
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           <div className="lg:col-span-2 space-y-6">
@@ -675,6 +696,14 @@ function PeptidePredictor() {
               </div>
             )}
 
+            {/* Batch: Parameters (3 params only) */}
+            {analysisMode === 'batch' && batchProteins.length > 0 && !batchResults && (
+              <BatchParameters 
+                params={params}
+                setParams={setParams}
+              />
+            )}
+
             {/* Parameters Panel (Single mode - visible immédiatement pour FASTA) */}
             {analysisMode === 'single' && (selectedProtein || searchType === 'fasta') && !results && (
               <ParametersPanel 
@@ -682,7 +711,7 @@ function PeptidePredictor() {
                 setMode={setMode}
                 params={params}
                 setParams={setParams}
-                recommendedParams={selectedProtein ? selectedProtein.recommendedParams : null}
+                signalPeptideLength={selectedProtein ? selectedProtein.recommendedParams?.signalPeptideLength : null}
                 isFasta={searchType === 'fasta'}
               />
             )}
