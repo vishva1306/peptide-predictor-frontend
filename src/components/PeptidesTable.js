@@ -18,6 +18,26 @@ export default function PeptidesTable({ results }) {
     return { label: t('sizeXLarge'), range: '>100 aa', color: 'bg-orange-900/30 text-orange-400' };
   };
 
+  const getConfidenceBadge = (badge, score) => {
+    const configs = {
+      high: { emoji: '🟢', label: 'High', color: 'bg-green-900/30 text-green-400' },
+      medium: { emoji: '🟡', label: 'Medium', color: 'bg-yellow-900/30 text-yellow-400' },
+      low: { emoji: '🟠', label: 'Low', color: 'bg-orange-900/30 text-orange-400' },
+      very_low: { emoji: '🔴', label: 'Very Low', color: 'bg-red-900/30 text-red-400' },
+    };
+
+    const config = configs[badge] || configs.very_low;
+
+    return (
+      <div className="flex items-center gap-2">
+        <span className={`text-xs px-2 py-1 rounded ${config.color}`}>
+          {config.emoji} {config.label}
+        </span>
+        <span className="text-xs text-slate-400">{score}</span>
+      </div>
+    );
+  };
+
   const getIdGeneName = () => {
     if (!results.proteinId || results.proteinId === 'N/A') return 'N/A';
     const match = results.proteinId.match(/[a-z]{2}\|([A-Z0-9]+)\|([A-Z0-9_]+)/i);
@@ -26,6 +46,7 @@ export default function PeptidesTable({ results }) {
 
   const idGeneName = getIdGeneName();
   const showUniProtColumn = !results.isFasta;
+  const isUltraPermissive = results.mode === 'ultra-permissive';
 
   return (
     <>
@@ -53,6 +74,16 @@ export default function PeptidesTable({ results }) {
                 <th className="px-4 py-3 text-left text-slate-300 font-semibold">{t('tableHeaderSequence')}</th>
                 <th className="px-4 py-3 text-left text-slate-300 font-semibold">{t('tableHeaderPosition')}</th>
                 <th className="px-4 py-3 text-left text-slate-300 font-semibold">{t('tableHeaderLength')}</th>
+
+                {isUltraPermissive && (
+                  <th className="px-4 py-3 text-left text-slate-300 font-semibold">
+                    <div>
+                      <div>Confidence</div>
+                      <div className="text-xs font-normal text-slate-500 mt-0.5">Score</div>
+                    </div>
+                  </th>
+                )}
+
                 <th className="px-4 py-3 text-left text-slate-300 font-semibold">
                   <div>
                     <div>{t('tableHeaderBioactivity')}</div>
@@ -81,7 +112,8 @@ export default function PeptidesTable({ results }) {
               {results.peptides.length > 0 ? (
                 results.peptides.map((peptide, idx) => {
                   const sizeCategory = getSizeCategory(peptide.length);
-                  const bioScore = typeof peptide.bioactivityScore === 'number' ? peptide.bioactivityScore : 0;
+                  const bioScore =
+                    typeof peptide.bioactivityScore === 'number' ? peptide.bioactivityScore : 0;
 
                   return (
                     <tr
@@ -92,15 +124,30 @@ export default function PeptidesTable({ results }) {
                     >
                       <td className="px-4 py-3 text-slate-400">{idx + 1}</td>
                       <td className="px-4 py-3 font-mono text-blue-300 text-xs">{idGeneName}</td>
-                      <td className="px-4 py-3 font-mono text-blue-300 text-xs break-all">{peptide.sequence}</td>
-                      <td className="px-4 py-3 text-slate-400 text-xs">{peptide.start}-{peptide.end}</td>
-                      <td className="px-4 py-3 text-slate-400 text-xs font-semibold">{peptide.length}</td>
+                      <td className="px-4 py-3 font-mono text-blue-300 text-xs break-all">
+                        {peptide.sequence}
+                      </td>
+                      <td className="px-4 py-3 text-slate-400 text-xs">
+                        {peptide.start}-{peptide.end}
+                      </td>
+                      <td className="px-4 py-3 text-slate-400 text-xs font-semibold">
+                        {peptide.length}
+                      </td>
 
-                      {/* Bioactivity */}
+                      {isUltraPermissive && (
+                        <td className="px-4 py-3">
+                          {getConfidenceBadge(peptide.confidenceBadge, peptide.confidenceScore)}
+                        </td>
+                      )}
+
                       <td className="px-4 py-3">
                         <div className="flex items-center gap-2">
-                          <span className="text-sm">{peptide.bioactivitySource === 'api' ? '🤖' : '📊'}</span>
-                          <span className="text-xs font-semibold text-white">{bioScore.toFixed(1)}/100</span>
+                          <span className="text-sm">
+                            {peptide.bioactivitySource === 'api' ? '🤖' : '📊'}
+                          </span>
+                          <span className="text-xs font-semibold text-white">
+                            {bioScore.toFixed(1)}/100
+                          </span>
                           <div className="w-16 bg-slate-700 rounded-full h-2">
                             <div
                               className={`h-2 rounded-full transition-all ${
@@ -116,7 +163,6 @@ export default function PeptidesTable({ results }) {
                         </div>
                       </td>
 
-                      {/* Size */}
                       <td className="px-4 py-3">
                         <span className={`text-xs px-2 py-1 rounded ${sizeCategory.color}`}>
                           {sizeCategory.label}
@@ -124,15 +170,18 @@ export default function PeptidesTable({ results }) {
                         </span>
                       </td>
 
-                      {/* UniProt column */}
                       {showUniProtColumn && (
                         <td className="px-4 py-3">
                           {peptide.uniprotStatus === 'exact' ? (
                             <div className="space-y-1">
                               <div className="flex items-center gap-1">
-                                <span className="text-green-400 text-xs font-semibold">✅ Exact match</span>
+                                <span className="text-green-400 text-xs font-semibold">
+                                  ✅ Exact match
+                                </span>
                               </div>
-                              <div className="text-xs text-slate-300 font-semibold">{peptide.uniprotName}</div>
+                              <div className="text-xs text-slate-300 font-semibold">
+                                {peptide.uniprotName}
+                              </div>
                               {peptide.uniprotAccession && (
                                 <a
                                   href={`https://www.uniprot.org/uniprotkb/${peptide.uniprotAccession}`}
@@ -148,12 +197,18 @@ export default function PeptidesTable({ results }) {
                           ) : peptide.uniprotStatus === 'partial' ? (
                             <div className="space-y-1">
                               <div className="flex items-center gap-1">
-                                <span className="text-yellow-400 text-xs font-semibold">⚠️ Partial match</span>
+                                <span className="text-yellow-400 text-xs font-semibold">
+                                  ⚠️ Partial match
+                                </span>
                               </div>
                               {peptide.uniprotNote && (
-                                <div className="text-xs text-slate-400 italic">{peptide.uniprotNote}</div>
+                                <div className="text-xs text-slate-400 italic">
+                                  {peptide.uniprotNote}
+                                </div>
                               )}
-                              <div className="text-xs text-slate-300 font-semibold">{peptide.uniprotName}</div>
+                              <div className="text-xs text-slate-300 font-semibold">
+                                {peptide.uniprotName}
+                              </div>
                               {peptide.uniprotAccession && (
                                 <a
                                   href={`https://www.uniprot.org/uniprotkb/${peptide.uniprotAccession}`}
@@ -172,7 +227,6 @@ export default function PeptidesTable({ results }) {
                         </td>
                       )}
 
-                      {/* PTMs */}
                       <td className="px-4 py-3">
                         {peptide.ptms && peptide.ptms.length > 0 ? (
                           <div className="space-y-1">
@@ -191,14 +245,26 @@ export default function PeptidesTable({ results }) {
                         )}
                       </td>
 
-                      {/* Motif */}
-                      <td className="px-4 py-3 text-slate-400 font-mono text-xs">{peptide.cleavageMotif}</td>
+                      <td className="px-4 py-3 text-slate-400 font-mono text-xs">
+                        {peptide.cleavageMotif}
+                      </td>
                     </tr>
                   );
                 })
               ) : (
                 <tr>
-                  <td colSpan={showUniProtColumn ? 10 : 9} className="px-4 py-4 text-center text-slate-500">
+                  <td
+                    colSpan={
+                      showUniProtColumn
+                        ? isUltraPermissive
+                          ? 11
+                          : 10
+                        : isUltraPermissive
+                        ? 10
+                        : 9
+                    }
+                    className="px-4 py-4 text-center text-slate-500"
+                  >
                     No peptides found with these parameters
                   </td>
                 </tr>

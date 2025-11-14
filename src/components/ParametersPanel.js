@@ -141,6 +141,21 @@ export default function ParametersPanel({
               <div className="text-xs text-slate-400 mt-1">{t('modeStrictDesc')}</div>
             </div>
           </label>
+
+          <label className="flex items-start gap-3 cursor-pointer p-3 bg-slate-900 hover:bg-slate-900/70 rounded-lg transition border border-slate-700 hover:border-slate-600">
+            <input
+              type="radio"
+              checked={mode === 'ultra-permissive'}
+              onChange={() => setMode('ultra-permissive')}
+              className="mt-1"
+            />
+            <div className="flex-1">
+              <div className="text-white font-medium">Ultra-Permissive</div>
+              <div className="text-xs text-slate-400 mt-1">
+                Detects RFamide peptides (NPFF/QRFP/26RFa) and single basic cleavage sites. Includes confidence scoring.
+              </div>
+            </div>
+          </label>
         </div>
       </div>
     </div>
