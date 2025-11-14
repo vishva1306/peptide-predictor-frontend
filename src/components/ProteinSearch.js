@@ -221,12 +221,12 @@ export default function ProteinSearch({
   if (searchType === 'fasta') {
     return (
       <div className="space-y-4">
-        {/* Toggle 3 boutons - MÊME LARGEUR */}
-        <div className="flex justify-start">
-          <div className="inline-flex bg-slate-900 rounded-lg p-1 border border-slate-700">
+        {/* ⭐ Toggle 3 boutons - RESPONSIVE MOBILE */}
+        <div className="flex justify-start overflow-x-auto">
+          <div className="inline-flex bg-slate-900 rounded-lg p-1 border border-slate-700 min-w-min">
             <button
               onClick={() => handleSearchTypeChange('gene_name')}
-              className={`w-40 py-2 rounded-lg transition text-sm ${
+              className={`w-32 sm:w-40 py-2 rounded-lg transition text-xs sm:text-sm whitespace-nowrap ${
                 searchType === 'gene_name'
                   ? 'bg-blue-600 text-white'
                   : 'text-slate-400 hover:text-white'
@@ -236,7 +236,7 @@ export default function ProteinSearch({
             </button>
             <button
               onClick={() => handleSearchTypeChange('accession')}
-              className={`w-40 py-2 rounded-lg transition text-sm ${
+              className={`w-32 sm:w-40 py-2 rounded-lg transition text-xs sm:text-sm whitespace-nowrap ${
                 searchType === 'accession'
                   ? 'bg-blue-600 text-white'
                   : 'text-slate-400 hover:text-white'
@@ -246,13 +246,13 @@ export default function ProteinSearch({
             </button>
             <button
               onClick={() => handleSearchTypeChange('fasta')}
-              className={`w-40 py-2 rounded-lg transition text-sm ${
+              className={`w-32 sm:w-40 py-2 rounded-lg transition text-xs sm:text-sm whitespace-nowrap ${
                 searchType === 'fasta'
                   ? 'bg-blue-600 text-white'
                   : 'text-slate-400 hover:text-white'
               }`}
             >
-              🧬 FASTA Sequence
+              🧬 FASTA
             </button>
           </div>
         </div>
@@ -269,13 +269,13 @@ export default function ProteinSearch({
   // Mode single (Gene Name / UniProt ID)
   return (
     <div className="space-y-4">
-      {/* Toggle 3 boutons - MÊME LARGEUR */}
+      {/* ⭐ Toggle 3 boutons - RESPONSIVE MOBILE */}
       {!selectedProtein && (
-        <div className="flex justify-start">
-          <div className="inline-flex bg-slate-900 rounded-lg p-1 border border-slate-700">
+        <div className="flex justify-start overflow-x-auto">
+          <div className="inline-flex bg-slate-900 rounded-lg p-1 border border-slate-700 min-w-min">
             <button
               onClick={() => handleSearchTypeChange('gene_name')}
-              className={`w-40 py-2 rounded-lg transition text-sm ${
+              className={`w-32 sm:w-40 py-2 rounded-lg transition text-xs sm:text-sm whitespace-nowrap ${
                 searchType === 'gene_name'
                   ? 'bg-blue-600 text-white'
                   : 'text-slate-400 hover:text-white'
@@ -285,7 +285,7 @@ export default function ProteinSearch({
             </button>
             <button
               onClick={() => handleSearchTypeChange('accession')}
-              className={`w-40 py-2 rounded-lg transition text-sm ${
+              className={`w-32 sm:w-40 py-2 rounded-lg transition text-xs sm:text-sm whitespace-nowrap ${
                 searchType === 'accession'
                   ? 'bg-blue-600 text-white'
                   : 'text-slate-400 hover:text-white'
@@ -295,13 +295,13 @@ export default function ProteinSearch({
             </button>
             <button
               onClick={() => handleSearchTypeChange('fasta')}
-              className={`w-40 py-2 rounded-lg transition text-sm ${
+              className={`w-32 sm:w-40 py-2 rounded-lg transition text-xs sm:text-sm whitespace-nowrap ${
                 searchType === 'fasta'
                   ? 'bg-blue-600 text-white'
                   : 'text-slate-400 hover:text-white'
               }`}
             >
-              🧬 FASTA Sequence
+              🧬 FASTA
             </button>
           </div>
         </div>
