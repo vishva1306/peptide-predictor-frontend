@@ -3,10 +3,12 @@ import { useTranslation } from '../i18n/useTranslation';
 import { ExternalLink } from 'lucide-react';
 import PTMBadge from './PTMBadge';
 import PTMModal from './PTMModal';
+import AmphipathicModal from './AmphipathicModal';
 
 export default function PeptidesTable({ results }) {
   const { t } = useTranslation();
   const [selectedPeptide, setSelectedPeptide] = useState(null);
+  const [amphipathicModalPeptide, setAmphipathicModalPeptide] = useState(null);
 
   if (!results || !results.peptides) return null;
 
@@ -93,6 +95,7 @@ export default function PeptidesTable({ results }) {
                   </div>
                 </th>
                 <th className="px-4 py-3 text-left text-slate-300 font-semibold">{t('tableHeaderSize')}</th>
+
                 {showUniProtColumn && (
                   <th className="px-4 py-3 text-left text-slate-300 font-semibold">
                     <div>
@@ -103,6 +106,15 @@ export default function PeptidesTable({ results }) {
                     </div>
                   </th>
                 )}
+
+                {/* Amphipathic */}
+                <th className="px-4 py-3 text-left text-slate-300 font-semibold">
+                  <div>
+                    <div>Amphipathic</div>
+                    <div className="text-xs font-normal text-slate-500 mt-0.5">Coverage %</div>
+                  </div>
+                </th>
+
                 <th className="px-4 py-3 text-left text-slate-300 font-semibold">{t('tableHeaderPTMs')}</th>
                 <th className="px-4 py-3 text-left text-slate-300 font-semibold">{t('tableHeaderMotif')}</th>
               </tr>
@@ -227,6 +239,37 @@ export default function PeptidesTable({ results }) {
                         </td>
                       )}
 
+                      {/* Amphipathic */}
+                      <td className="px-4 py-3">
+                        <div className="flex flex-col gap-1">
+                          <div className="text-sm font-semibold text-white">
+                            {peptide.amphipathicScore !== undefined ? (
+                              <span
+                                className={`${
+                                  peptide.amphipathicScore >= 80
+                                    ? 'text-green-400'
+                                    : peptide.amphipathicScore >= 60
+                                    ? 'text-yellow-400'
+                                    : 'text-slate-400'
+                                }`}
+                              >
+                                {peptide.amphipathicScore}% 🟢
+                              </span>
+                            ) : (
+                              <span className="text-slate-500">N/A</span>
+                            )}
+                          </div>
+                          {peptide.amphipathicData && (
+                            <button
+                              onClick={() => setAmphipathicModalPeptide(peptide)}
+                              className="text-xs text-blue-400 hover:text-blue-300 transition text-left"
+                            >
+                              🔍 View Details
+                            </button>
+                          )}
+                        </div>
+                      </td>
+
                       <td className="px-4 py-3">
                         {peptide.ptms && peptide.ptms.length > 0 ? (
                           <div className="space-y-1">
@@ -257,11 +300,11 @@ export default function PeptidesTable({ results }) {
                     colSpan={
                       showUniProtColumn
                         ? isUltraPermissive
-                          ? 11
-                          : 10
+                          ? 12
+                          : 11
                         : isUltraPermissive
-                        ? 10
-                        : 9
+                        ? 11
+                        : 10
                     }
                     className="px-4 py-4 text-center text-slate-500"
                   >
@@ -274,8 +317,9 @@ export default function PeptidesTable({ results }) {
         </div>
       </div>
 
-      {selectedPeptide && (
-        <PTMModal peptide={selectedPeptide} onClose={() => setSelectedPeptide(null)} />
+      {selectedPeptide && <PTMModal peptide={selectedPeptide} onClose={() => setSelectedPeptide(null)} />}
+      {amphipathicModalPeptide && (
+        <AmphipathicModal peptide={amphipathicModalPeptide} onClose={() => setAmphipathicModalPeptide(null)} />
       )}
     </>
   );

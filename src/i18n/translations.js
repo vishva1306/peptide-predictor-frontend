@@ -1,7 +1,7 @@
 export const translations = {
   en: {
     // Header
-    title: "Peptide Predictor - Svensson Lab",
+    title: "PeptiMind - Svensson Lab",
     subtitle: "Analyze protein sequences with PCSK1/3 cleavage detection",
     labWebsite: "Svensson Lab Website",
     
@@ -159,7 +159,7 @@ export const translations = {
   
   fr: {
     // Header
-    title: "Prédicteur de Peptides - Svensson Lab",
+    title: "PeptiMind - Svensson Lab",
     subtitle: "Analysez les séquences protéiques avec détection PCSK1/3",
     labWebsite: "Site du Svensson Lab",
     

@@ -433,7 +433,7 @@ function PeptidePredictor() {
             formatPTMs(p.ptms),
             p.modifiedSequence || p.sequence,
             p.cleavageMotif,
-            mode === 'strict' ? 'STRICT' : 'PERMISSIVE'
+            mode === 'ultra-permissive' ? 'ULTRA-PERMISSIVE' : mode === 'strict' ? 'STRICT' : 'PERMISSIVE'
           ];
         } else {
           // FASTA: pas de colonne UniProt
@@ -442,7 +442,7 @@ function PeptidePredictor() {
             formatPTMs(p.ptms),
             p.modifiedSequence || p.sequence,
             p.cleavageMotif,
-            mode === 'strict' ? 'STRICT' : 'PERMISSIVE'
+            mode === 'ultra-permissive' ? 'ULTRA-PERMISSIVE' : mode === 'strict' ? 'STRICT' : 'PERMISSIVE'
           ];
         }
       }),
@@ -527,7 +527,7 @@ function PeptidePredictor() {
           formatPTMs(p.ptms),
           p.modifiedSequence || p.sequence,
           p.cleavageMotif,
-          mode === 'strict' ? 'STRICT' : 'PERMISSIVE'
+          mode === 'ultra-permissive' ? 'ULTRA-PERMISSIVE' : mode === 'strict' ? 'STRICT' : 'PERMISSIVE'
         ]);
       });
     });
@@ -716,7 +716,7 @@ function PeptidePredictor() {
               />
             )}
 
-            {/* Mode Selection (Batch only) */}
+            {/* ⭐ Mode Selection (Batch only) - MODIFIÉ AVEC ULTRA-PERMISSIVE */}
             {analysisMode === 'batch' && batchProteins.length > 0 && !batchResults && (
               <div className="bg-slate-800 rounded-lg p-6 border border-slate-700">
                 <label className="block text-sm text-slate-300 mb-3">
@@ -749,6 +749,22 @@ function PeptidePredictor() {
                     <div className="flex-1">
                       <div className="text-white font-medium">{t('modeStrict')}</div>
                       <div className="text-xs text-slate-400 mt-1">{t('modeStrictDesc')}</div>
+                    </div>
+                  </label>
+
+                  {/* ⭐ NOUVEAU : Ultra-Permissive */}
+                  <label className="flex items-start gap-3 cursor-pointer p-3 bg-slate-900 hover:bg-slate-900/70 rounded-lg transition border border-slate-700 hover:border-slate-600">
+                    <input
+                      type="radio"
+                      checked={mode === 'ultra-permissive'}
+                      onChange={() => setMode('ultra-permissive')}
+                      className="mt-1"
+                    />
+                    <div className="flex-1">
+                      <div className="text-white font-medium">Ultra-Permissive</div>
+                      <div className="text-xs text-slate-400 mt-1">
+                        Detects RFamide peptides (NPFF/QRFP/26RFa) and single basic cleavage sites. Includes confidence scoring.
+                      </div>
                     </div>
                   </label>
                 </div>
