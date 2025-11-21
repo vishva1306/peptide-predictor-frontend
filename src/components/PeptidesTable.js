@@ -4,11 +4,13 @@ import { ExternalLink } from 'lucide-react';
 import PTMBadge from './PTMBadge';
 import PTMModal from './PTMModal';
 import AmphipathicModal from './AmphipathicModal';
+import BrainModal from './BrainModal';
 
 export default function PeptidesTable({ results }) {
   const { t } = useTranslation();
   const [selectedPeptide, setSelectedPeptide] = useState(null);
   const [amphipathicModalPeptide, setAmphipathicModalPeptide] = useState(null);
+  const [selectedBrainPeptide, setSelectedBrainPeptide] = useState(null);
 
   if (!results || !results.peptides) return null;
 
@@ -60,6 +62,12 @@ export default function PeptidesTable({ results }) {
           <p className="text-sm text-slate-400 mt-1">
             {results.peptidesInRange} {t('peptidesInRangeNote')}
           </p>
+          {/* Brain peptides stat */}
+          {results.brainPeptidesDetected !== undefined && results.brainPeptidesDetected > 0 && (
+            <p className="text-xs text-green-400 mt-1">
+              🧠 {results.brainPeptidesDetected} peptide(s) detected in human brain
+            </p>
+          )}
           {idGeneName !== 'N/A' && (
             <p className="text-xs text-slate-500 mt-2 font-mono">
               {t('tableHeaderIdGeneName')}: {idGeneName}
@@ -112,6 +120,14 @@ export default function PeptidesTable({ results }) {
                   <div>
                     <div>Amphipathic</div>
                     <div className="text-xs font-normal text-slate-500 mt-0.5">Coverage %</div>
+                  </div>
+                </th>
+
+                {/* Brain Detection */}
+                <th className="px-4 py-3 text-left text-slate-300 font-semibold">
+                  <div>
+                    <div>Brain Detection</div>
+                    <div className="text-xs font-normal text-slate-500 mt-0.5">LC-MS/MS</div>
                   </div>
                 </th>
 
@@ -182,6 +198,7 @@ export default function PeptidesTable({ results }) {
                         </span>
                       </td>
 
+                      {/* UniProt Column - CORRIGÉ */}
                       {showUniProtColumn && (
                         <td className="px-4 py-3">
                           {peptide.uniprotStatus === 'exact' ? (
@@ -239,7 +256,7 @@ export default function PeptidesTable({ results }) {
                         </td>
                       )}
 
-                      {/* Amphipathic */}
+                      {/* Amphipathic - CORRIGÉ */}
                       <td className="px-4 py-3">
                         <div className="flex flex-col gap-1">
                           <div className="text-sm font-semibold text-white">
@@ -270,6 +287,27 @@ export default function PeptidesTable({ results }) {
                         </div>
                       </td>
 
+                      {/* Brain Detection - CORRIGÉ */}
+                      <td className="px-4 py-3 whitespace-nowrap">
+                        {peptide.brainPeptide && peptide.brainPeptide.found ? (
+                          <div className="flex flex-col gap-1">
+                            <div className="inline-flex items-center gap-1 px-2 py-1 bg-green-900/30 border border-green-700 rounded text-xs text-green-300 font-medium">
+                              <span>🧠</span>
+                              <span>Found</span>
+                            </div>
+                            <button
+                              onClick={() => setSelectedBrainPeptide(peptide)}
+                              className="text-xs text-blue-400 hover:text-blue-300 underline text-left"
+                            >
+                              View Details
+                            </button>
+                          </div>
+                        ) : (
+                          <span className="text-slate-500 text-xs">—</span>
+                        )}
+                      </td>
+
+                      {/* PTMs - CORRIGÉ */}
                       <td className="px-4 py-3">
                         {peptide.ptms && peptide.ptms.length > 0 ? (
                           <div className="space-y-1">
@@ -288,6 +326,7 @@ export default function PeptidesTable({ results }) {
                         )}
                       </td>
 
+                      {/* Motif - CORRIGÉ */}
                       <td className="px-4 py-3 text-slate-400 font-mono text-xs">
                         {peptide.cleavageMotif}
                       </td>
@@ -300,11 +339,11 @@ export default function PeptidesTable({ results }) {
                     colSpan={
                       showUniProtColumn
                         ? isUltraPermissive
-                          ? 12
-                          : 11
+                          ? 13
+                          : 12
                         : isUltraPermissive
-                        ? 11
-                        : 10
+                        ? 12
+                        : 11
                     }
                     className="px-4 py-4 text-center text-slate-500"
                   >
@@ -317,9 +356,16 @@ export default function PeptidesTable({ results }) {
         </div>
       </div>
 
+      {/* Modals */}
       {selectedPeptide && <PTMModal peptide={selectedPeptide} onClose={() => setSelectedPeptide(null)} />}
       {amphipathicModalPeptide && (
         <AmphipathicModal peptide={amphipathicModalPeptide} onClose={() => setAmphipathicModalPeptide(null)} />
+      )}
+      {selectedBrainPeptide && (
+        <BrainModal
+          peptide={selectedBrainPeptide}
+          onClose={() => setSelectedBrainPeptide(null)}
+        />
       )}
     </>
   );
